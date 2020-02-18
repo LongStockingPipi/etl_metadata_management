@@ -1,7 +1,10 @@
 package pers.jason.etl.rest.dao;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import pers.jason.etl.rest.pojo.po.ExternalPlatform;
+
+import java.util.List;
 
 /**
  * @author Jason
@@ -13,6 +16,8 @@ public interface ExternalPlatformDao {
 
   ExternalPlatform save(ExternalPlatform platform);
 
+  ExternalPlatform saveAll(List<ExternalPlatform> platforms);
+
   void delete(Long id);
 
   /**
@@ -22,7 +27,7 @@ public interface ExternalPlatformDao {
    * @param tableId
    * @return
    */
-  ExternalPlatform findAll(Long platformId, Long schemaId, Long tableId);
+  ExternalPlatform findAll(@Param("platformId") Long platformId, @Param("schemaId") Long schemaId, @Param("tableId") Long tableId);
 
-  ExternalPlatform findPlatform(Long platformId);
+  ExternalPlatform findPlatform(@Param("id") Long platformId);
 }

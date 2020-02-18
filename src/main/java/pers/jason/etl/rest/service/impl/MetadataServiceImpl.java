@@ -10,7 +10,6 @@ import pers.jason.etl.rest.dao.ExternalTableDao;
 import pers.jason.etl.rest.exception.InvalidServiceNameException;
 import pers.jason.etl.rest.pojo.ConnectPioneer;
 import pers.jason.etl.rest.pojo.PlatformType;
-import pers.jason.etl.rest.pojo.po.ExternalSchema;
 import pers.jason.etl.rest.pojo.po.Platform;
 import pers.jason.etl.rest.request.SynchronyRequest;
 import pers.jason.etl.rest.service.DatabaseService;
@@ -37,13 +36,13 @@ public class MetadataServiceImpl implements MetadataService {
   @Autowired
   private DatabaseService databaseService;
 
-  @Autowired
+//  @Autowired
   private ExternalPlatformDao externalPlatformDao;
 
-  @Autowired
+//  @Autowired
   private ExternalSchemaDao externalSchemaDao;
 
-  @Autowired
+//  @Autowired
   private ExternalTableDao externalTableDao;
 
   @Override

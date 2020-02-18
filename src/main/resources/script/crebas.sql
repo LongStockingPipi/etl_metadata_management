@@ -10,10 +10,12 @@ CREATE TABLE `t_etl_metadata_external_platform` (
   `updated_at` datetime NOT NULL COMMENT '更新时间',
   `updated_by` bigint(20) NOT NULL COMMENT '更新人',
   `comments` varchar(1024) DEFAULT NULL COMMENT '备注',
+  `status` tinyint(4) NOT NULL COMMENT '是否被删除',
   PRIMARY KEY (`p_id`),
   UNIQUE KEY `AK_NAME` (`p_name`),
   UNIQUE KEY `AK_Key_3` (`connect_url`,`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE TABLE `t_etl_metadata_external_schema` (
   `s_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '库ID（唯一）',
@@ -26,6 +28,7 @@ CREATE TABLE `t_etl_metadata_external_schema` (
   `updated_by` bigint(20) NOT NULL COMMENT '更新人',
   `comments` varchar(1024) DEFAULT NULL COMMENT '备注',
   `init_commands` varchar(1024) DEFAULT NULL COMMENT '初始化脚本',
+  `status` tinyint(4) NOT NULL COMMENT '是否被删除',
   PRIMARY KEY (`s_id`),
   UNIQUE KEY `AK_NAME` (`s_name`),
   UNIQUE KEY `AK_PLTFRMID_CODE` (`platform_id`,`s_name`)
@@ -43,6 +46,8 @@ CREATE TABLE `t_etl_metadata_external_table` (
   `updated_by` bigint(20) NOT NULL COMMENT '更新时间',
   `comments` varchar(1024) DEFAULT NULL COMMENT '备注',
   `type_code` int(11) NOT NULL COMMENT '表类型',
+  `status` tinyint(4) NOT NULL COMMENT '是否被删除',
+  `init_commands` varchar(1024) DEFAULT NULL COMMENT '初始化脚本',
   PRIMARY KEY (`t_id`),
   UNIQUE KEY `AK_SCHEMAID_CODE` (`schema_id`,`t_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -64,6 +69,7 @@ CREATE TABLE `t_etl_metadata_external_column` (
   `updated_at` datetime NOT NULL COMMENT '更新时间',
   `updated_by` bigint(20) NOT NULL COMMENT '更新人',
   `comments` varchar(1024) DEFAULT NULL COMMENT '备注',
+  `status` tinyint(4) NOT NULL COMMENT '是否被删除',
   PRIMARY KEY (`c_id`),
   UNIQUE KEY `AK_TABID_CODE` (`table_id`,`c_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

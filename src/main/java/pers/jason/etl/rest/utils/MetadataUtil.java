@@ -1,7 +1,10 @@
 package pers.jason.etl.rest.utils;
 
+import pers.jason.etl.commons.Symbol;
 import pers.jason.etl.rest.pojo.PlatformType;
 import pers.jason.etl.rest.pojo.VirtualPlatform;
+
+import java.util.Map;
 
 /**
  * @author Jason
@@ -10,9 +13,11 @@ import pers.jason.etl.rest.pojo.VirtualPlatform;
  */
 public class MetadataUtil {
 
-  private static final String DRIVER_NAME_MYSQL = "com.mysql.jdbc.Driver";
+  public static final String DRIVER_NAME_MYSQL = "com.mysql.jdbc.Driver";
 
-  private static final String DRIVER_NAME_ORACLE = "com.mysql.jdbc.Driver";
+  public static final String DRIVER_NAME_ORACLE = "com.mysql.jdbc.Driver";
+
+  public static final String URL_PREFIX_MYSQL = "jdbc:mysql://";
 
   public static VirtualPlatform getVirtualPlatform() {
     return new VirtualPlatform();
@@ -26,5 +31,15 @@ public class MetadataUtil {
     } else {
       return null;
     }
+  }
+
+  public static String joinProps(final Map<String, String> props) {
+    StringBuilder sb = new StringBuilder();
+    if(null != props && props.size() > 0) {
+      for(Map.Entry entry : props.entrySet()) {
+        sb.append(entry.getKey()).append(Symbol.SIGN_EQUALS).append(entry.getValue()).append(Symbol.SIGN_AND);
+      }
+    }
+    return sb.toString();
   }
 }

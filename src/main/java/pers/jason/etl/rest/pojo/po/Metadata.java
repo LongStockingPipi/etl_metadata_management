@@ -32,4 +32,6 @@ public class Metadata implements Serializable {
   private String comments;
 
   private String fullName;
+
+  private Boolean status;
 }

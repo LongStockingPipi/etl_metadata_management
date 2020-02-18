@@ -9,5 +9,9 @@ import pers.jason.etl.rest.pojo.ConnectPioneer;
  */
 public interface DatabaseService {
 
-  void connect(ConnectPioneer pioneer);
+  String SQL_EXIST_TABLE = "select exists(select * from INFORMATION_SCHEMA.TABLES where table_schema = '%s' and table_name = '%s') as is_exist";
+
+  String SQL_RESULT_COLUMN_LABEL_IS_EXIST = "is_exist";
+
+  boolean connect(ConnectPioneer pioneer);
 }
