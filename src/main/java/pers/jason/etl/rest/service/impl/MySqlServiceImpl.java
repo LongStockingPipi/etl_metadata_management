@@ -15,7 +15,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 
 /**
  * @author Jason
@@ -29,29 +28,22 @@ public class MySqlServiceImpl implements DatabaseService {
 
   @Override
   public boolean connect(ConnectPioneer pioneer) {
-    String url = MetadataUtil.URL_PREFIX_MYSQL + pioneer.getUrl();
-    String username = pioneer.getUsername();
-    String password = pioneer.getPassword();
-    String schemaName = pioneer.getSchemaName();
-    if(StringUtils.isNoneEmpty(schemaName)) {
-      url = url + "/" + schemaName;
-    }
-    Map<String, String> props = pioneer.getProps();
-    if(null != props && props.size() > 0) {
-      url = url + "?" + MetadataUtil.joinProps(props);
-    }
+    //检测驱动
     String driverName = pioneer.getDriverName();
     try {
       Class.forName(driverName);
-      logger.info("drive load successful:" + getConnectMessage(url, username, password));
+      logger.info("drive load successful:" + getConnectMessage(pioneer));
     } catch (ClassNotFoundException e) {
       logger.error(e.getMessage(), e);
-      logger.info("driver load failure:" + getConnectMessage(url, username, password));
+      logger.info("driver load failure:" + getConnectMessage(pioneer));
       return false;
     }
-    try (Connection connection = DriverManager.getConnection(url, username, password)) {
+    //连接server
+    String url = MetadataUtil.getUrlByPioneer(pioneer);
+    try (Connection connection = DriverManager.getConnection(url, pioneer.getUsername(), pioneer.getPassword())) {
       String tableName = pioneer.getTableName();
       if(StringUtils.isNotEmpty(tableName)) {
+        String schemaName = pioneer.getSchemaName();
         String sql = String.format(SQL_EXIST_TABLE, schemaName, tableName);
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ResultSet resultSet = preparedStatement.executeQuery();
@@ -71,7 +63,11 @@ public class MySqlServiceImpl implements DatabaseService {
     }
   }
 
-  private String getConnectMessage(String url, String username, String password) {
+  private String getConnectMessage(ConnectPioneer pioneer) {
+    String url = pioneer.getUrl();
+    String username = pioneer.getUsername();
+    String password = pioneer.getPassword();
     return new StringBuilder(url).append(Symbol.SIGN_SEMICOLON).append(username).append(Symbol.SIGN_SEMICOLON).append(password).toString();
   }
+
 }

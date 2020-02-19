@@ -1,5 +1,6 @@
 package pers.jason.etl.rest.pojo.po;
 
+import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,5 +27,5 @@ public class ExternalTable extends Metadata {
 
   private Integer type;
 
-  private Set<ExternalColumn> columnSet;
+  private Set<ExternalColumn> columnSet = Sets.newHashSet();
 }

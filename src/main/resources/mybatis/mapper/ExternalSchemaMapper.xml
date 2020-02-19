@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pers.jason.etl.rest.dao.ExternalSchemaDao">
+
+    <select id="findSchema" resultMap="SCHEMA_MAP">
+        SELECT s_id, platform_id, s_name, s_c_name, created_at, created_by, updated_at
+        , updated_by, comments, init_commands, status
+        FROM etl.t_etl_metadata_external_schema where s_id = #{id} and status = true;
+    </select>
+
+    <resultMap id="SCHEMA_MAP" type="pers.jason.etl.rest.pojo.po.ExternalSchema">
+        <id column="s_id" property="id"/>
+        <result column="platform_id" property="platformId"/>
+        <result column="s_name" property="name"/>
+        <result column="s_c_name" property="cName"/>
+        <result column="created_at" property="createdTime"/>
+        <result column="created_by" property="creator"/>
+        <result column="updated_at" property="updatedTime"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="comments" property="comments"/>
+        <result column="init_commands" property="initCommands"/>
+        <result column="" property="fullName"/>
+    </resultMap>
+
+</mapper>

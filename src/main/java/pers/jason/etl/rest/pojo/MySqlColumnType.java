@@ -1,6 +1,6 @@
 package pers.jason.etl.rest.pojo;
 
-public enum MySqlColumnType {
+public enum MySqlColumnType implements ExternalColumnType{
 
   INT(0, "int"),
 
@@ -20,7 +20,7 @@ public enum MySqlColumnType {
 
   MEDIUMBLOB(8, "mediumblob"),
 
-  VARBINATY(9, "varbinary"),
+  VARBINARY(9, "varbinary"),
 
   DATE(10, "date"),
 
@@ -83,5 +83,16 @@ public enum MySqlColumnType {
   MySqlColumnType(Integer code, String name) {
     this.code = code;
     this.name = name;
+  }
+
+
+  @Override
+  public Integer getCode() {
+    return code;
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
 }

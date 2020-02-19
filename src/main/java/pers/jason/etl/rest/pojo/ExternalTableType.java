@@ -3,11 +3,12 @@ package pers.jason.etl.rest.pojo;
 public enum ExternalTableType {
 
   BASE_TABLE(0, "BASE TABLE"),
-  VIEW(1, "VIEW");
+  VIEW(1, "VIEW"),
+  SYSTEM_VIEW(2, "SYSTEM VIEW");
 
-  private Integer code;
+  public Integer code;
 
-  private String name;
+  public String name;
 
   ExternalTableType(Integer code, String name) {
     this.code = code;

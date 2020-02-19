@@ -1,5 +1,6 @@
 package pers.jason.etl.rest.pojo.po;
 
+import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,6 @@ public class ExternalPlatform extends Platform {
 
   private Integer typeCode;
 
-  private Set<ExternalSchema> schemaSet;
+  private Set<ExternalSchema> schemaSet = Sets.newHashSet();
 
 }

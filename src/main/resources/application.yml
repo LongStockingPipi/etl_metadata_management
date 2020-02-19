@@ -3,8 +3,13 @@ spring:
   datasource:
     username: root
     password: Hongdou@521
-    url: jdbc:mysql://47.100.102.187:3306/spiderweb?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://47.100.102.187:3306/etl?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
     driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    database: 0
+    host: 47.100.102.187
+    port: 6379
+    password: jason
 #  data:
 #    neo4j:
 #      uri: bolt://localhost:7687

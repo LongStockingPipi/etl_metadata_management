@@ -29,7 +29,7 @@
     <select id="findPlatform" resultMap="PLATFORM_MAP">
         SELECT p_id, type_code, p_name, connect_url, username, passwd, created_at, created_by,
             updated_at, updated_by, comments, concat('/', type_code, '_', p_id) as full_name
-        FROM etl.t_etl_metadata_external_platform where status = true and p_id = #{id};
+        FROM t_etl_metadata_external_platform where status = true and p_id = #{id};
     </select>
 
     <select id="findAll" resultMap="METADATA_MAP">
@@ -45,10 +45,11 @@
 
         c.c_id, c.c_name, c.c_c_name, c.type_code as c_type_code, c.is_partition_field, c.is_primary_key, c.is_nullable, c.max_length,
         c.numeric_scale, c.table_id, c.position as c_position, c.created_at as c_created_at, c.created_by as c_created_by
-        , c.updated_at as c_updated_at, c.updated_by as c_updated_by, c.comments as c_comments,
-        concat('/', type_code, '_', p_id) as p_full_name, concat('/', type_code, '_', p_id, '/', s.name) as s_full_name,
-        concat('/', type_code, '_', p_id, '/', s.s_name, '/', t.t_name) as t_full_name,
-        concat('/', type_code, '_', p_id, '/', s.s_name, '/', t.t_name, '/', c_c_name) as c_full_name
+        , c.updated_at as c_updated_at, c.updated_by as c_updated_by, c.comments as c_comments
+        , lower(concat('/metadata_external_', p_id)) as p_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name)) as s_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code)) as t_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code, '/', c.c_name, '_', c.type_code, '_', c.position)) as c_full_name
         from t_etl_metadata_external_platform p
         left join t_etl_metadata_external_schema s on s.platform_id = p.p_id and s.status = true
         <if test="null != schemaId">

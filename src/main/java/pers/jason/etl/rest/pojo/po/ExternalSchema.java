@@ -1,5 +1,6 @@
 package pers.jason.etl.rest.pojo.po;
 
+import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,5 @@ public class ExternalSchema extends Metadata {
 
   private String cName;
 
-  private Set<ExternalTable> tableSet;
+  private Set<ExternalTable> tableSet = Sets.newHashSet();
 }

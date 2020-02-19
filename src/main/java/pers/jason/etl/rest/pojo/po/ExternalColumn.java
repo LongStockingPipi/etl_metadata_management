@@ -21,7 +21,7 @@ public class ExternalColumn extends Metadata {
   private Integer type;
 
   //是否是分区字段
-  private Boolean partitionField;
+  private Boolean partitionField = false;
 
   //是否是主键
   private Boolean primaryKey;

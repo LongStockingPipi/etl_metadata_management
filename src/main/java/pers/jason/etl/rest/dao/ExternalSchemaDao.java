@@ -11,9 +11,9 @@ import pers.jason.etl.rest.pojo.po.ExternalSchema;
 @Mapper
 public interface ExternalSchemaDao {
 
-  ExternalSchema save(ExternalSchema schema);
-
-  void delete(Long id);
+//  ExternalSchema save(ExternalSchema schema);
+//
+//  void delete(Long id);
 
   ExternalSchema findSchema(Long id);
 }

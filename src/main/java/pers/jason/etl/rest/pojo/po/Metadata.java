@@ -21,11 +21,11 @@ public class Metadata implements Serializable {
 
   private String name;
 
-  private Date createdTime;
+  private Date createdTime = new Date();
 
   private Long creator;
 
-  private Date updatedTime;
+  private Date updatedTime = new Date();
 
   private Long updatedBy;
 
@@ -33,5 +33,5 @@ public class Metadata implements Serializable {
 
   private String fullName;
 
-  private Boolean status;
+  private Boolean status = true;
 }

@@ -1,6 +1,7 @@
 package pers.jason.etl.rest.service;
 
 import pers.jason.etl.rest.pojo.ConnectPioneer;
+import pers.jason.etl.rest.pojo.dto.SimpleResponse;
 
 /**
  * @author Jason

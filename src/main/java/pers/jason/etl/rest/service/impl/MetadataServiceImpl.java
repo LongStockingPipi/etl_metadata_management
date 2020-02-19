@@ -10,6 +10,7 @@ import pers.jason.etl.rest.dao.ExternalTableDao;
 import pers.jason.etl.rest.exception.InvalidServiceNameException;
 import pers.jason.etl.rest.pojo.ConnectPioneer;
 import pers.jason.etl.rest.pojo.PlatformType;
+import pers.jason.etl.rest.pojo.SynchronizeModel;
 import pers.jason.etl.rest.pojo.po.Platform;
 import pers.jason.etl.rest.request.SynchronyRequest;
 import pers.jason.etl.rest.service.DatabaseService;
@@ -31,15 +32,15 @@ public class MetadataServiceImpl implements MetadataService {
   private static final Logger logger = LoggerFactory.getLogger(MetadataServiceImpl.class);
 
   @Autowired
-  private Map<String, MetadataSynchronizeTemplate> templateMap;
+  private SynchronizeServiceHolder synchronizeServiceHolder;
 
   @Autowired
   private DatabaseService databaseService;
 
-//  @Autowired
+  @Autowired
   private ExternalPlatformDao externalPlatformDao;
 
-//  @Autowired
+  @Autowired
   private ExternalSchemaDao externalSchemaDao;
 
 //  @Autowired
@@ -49,31 +50,27 @@ public class MetadataServiceImpl implements MetadataService {
   public void syncMetadata(SynchronyRequest request) {
     Integer platformTypeCode = request.getPlatformType();
     PlatformType platformType = PlatformTypeUtil.getPlatformTypeByCode(platformTypeCode);
+
     //检测是否可连接
     Long platformId = request.getPlatformId();
     Long schemaId = request.getSchemaId();
     Long tableId = request.getTableId();
-    Platform platform;
-    if(null == platformId) {
-      platform = MetadataUtil.getVirtualPlatform();
-    } else {
-      platform = externalPlatformDao.findPlatform(platformId);
-    }
+    Platform platform = externalPlatformDao.findPlatform(platformId);
     String schemaName = externalSchemaDao.findSchema(schemaId).getName();
     String tableName = externalTableDao.findTable(tableId).getName();
     ConnectPioneer pioneer = getPioneerByPlatform(platformType, platform, schemaName, tableName);
     databaseService.connect(pioneer);
-    //获取同步service
-    String typeName = platformType.name;
-    String serviceName = typeName + SUFFIX_TEMPLATE_SERVICE_NAME;
-    MetadataSynchronizeTemplate synchronizeTemplate = templateMap.get(serviceName);
-    if(null == synchronizeTemplate) {
-      throw new InvalidServiceNameException(typeName);
-    }
-    //开始同步
+
+    MetadataSynchronizeTemplate synchronizeTemplate = synchronizeServiceHolder.findMetadataSynchronizeService(platformType);
+    SynchronizeModel synchronizeModel = new SynchronizeModel(
+        platformId, schemaId, tableId, pioneer.getUrl(), pioneer.getUsername(), pioneer.getPassword()
+        , pioneer.getDriverName(), schemaName, tableName);
     Long start = System.currentTimeMillis();
-    logger.info("begin synchronize metadata");
-    synchronizeTemplate.synchronize(request.getSyncType(), platformId, schemaId, tableId);
+    try {
+      synchronizeTemplate.synchronize(synchronizeModel);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     logger.info("synchronous data completion! It takes " + (System.currentTimeMillis() - start) + " milliseconds");
   }
 
@@ -85,6 +82,7 @@ public class MetadataServiceImpl implements MetadataService {
     pioneer.setSchemaName(schemaName);
     pioneer.setTableName(tableName);
     pioneer.setDriverName(MetadataUtil.getDriverNameByType(platformType));
+    pioneer.setPlatformType(platformType);
     return pioneer;
   }
 

@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 import pers.jason.etl.rest.exception.DatabaseServerConnectFailedException;
 import pers.jason.etl.rest.pojo.ConnectPioneer;
+import pers.jason.etl.rest.pojo.PlatformType;
 import pers.jason.etl.rest.service.DatabaseService;
 import pers.jason.etl.rest.utils.MetadataUtil;
 
@@ -27,6 +28,7 @@ class TestForDatabaseService {
     pioneer.setPassword("Hongdou@521");
     pioneer.setSchemaName("sys");
     pioneer.setDriverName(MetadataUtil.DRIVER_NAME_MYSQL);
+    pioneer.setPlatformType(PlatformType.MYSQL);
     Map<String, String> props = Maps.newHashMap();
     props.put("serverTimezone", "UTC");
     pioneer.setProps(props);

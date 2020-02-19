@@ -30,6 +30,8 @@ public class ConnectPioneer {
 
   private String driverName;
 
+  private PlatformType platformType;
+
   private Map<String, String> props = Maps.newHashMap();
 
   public void addProperty(final String key, final String value) {
