@@ -3,6 +3,9 @@ package pers.jason.etl.rest.pojo.po;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pers.jason.etl.rest.pojo.MetadataType;
+
+import java.util.Set;
 
 /**
  * @author Jason
@@ -12,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExternalColumn extends Metadata {
+public class ExternalColumn extends Column {
 
   private Long tableId;
 
@@ -35,5 +38,20 @@ public class ExternalColumn extends Metadata {
   private Long numericScale;
 
   private Integer position;
+
+  @Override
+  public <T extends Metadata> Set<T> getChild() {
+    return null;
+  }
+
+  @Override
+  public void setParentId(Long id) {
+    this.setTableId(id);
+  }
+
+  @Override
+  public MetadataType returnMetadataType() {
+    return MetadataType.COLUMN;
+  }
 
 }

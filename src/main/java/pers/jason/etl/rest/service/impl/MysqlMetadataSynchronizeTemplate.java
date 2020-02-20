@@ -1,5 +1,6 @@
 package pers.jason.etl.rest.service.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
@@ -16,8 +17,10 @@ import pers.jason.etl.rest.pojo.po.ExternalColumn;
 import pers.jason.etl.rest.pojo.po.ExternalPlatform;
 import pers.jason.etl.rest.pojo.po.ExternalSchema;
 import pers.jason.etl.rest.pojo.po.ExternalTable;
+import pers.jason.etl.rest.pojo.po.Metadata;
 import pers.jason.etl.rest.pojo.po.Platform;
 import pers.jason.etl.rest.service.CacheService;
+import pers.jason.etl.rest.service.MetadataCrudService;
 import pers.jason.etl.rest.service.MetadataSynchronizeTemplate;
 import pers.jason.etl.rest.utils.MetadataUtil;
 import pers.jason.etl.rest.utils.Sql;
@@ -29,6 +32,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,6 +50,9 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
 
   @Autowired
   private CacheService cacheService;
+
+  @Autowired
+  private SynchronizeServiceHolder synchronizeServiceHolder;
 
   @Override
   protected Platform findDataFromLocal(Long platformId, Long schemaId, Long tableId) {
@@ -122,6 +130,16 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
       e.printStackTrace();
     }
     return platform;
+  }
+
+  @Override
+  protected void processingData(Map<String, Set<Metadata>> discrepantData) {
+    MetadataCrudService metadataCrudService = synchronizeServiceHolder.findMetadataCrudService(PlatformType.MYSQL);
+    Set<Metadata> mis = discrepantData.get(DATA_MISSING);
+    Set<Metadata> ref = discrepantData.get(DATA_REFUND);
+    metadataCrudService.deleteMetadata(ref);
+    metadataCrudService.insertMetadata(mis);
+    //todo 更新缓存
   }
 
   private ExternalColumn getExternalColumnFromResultSet(final ResultSet rs, Long platformId) throws SQLException {

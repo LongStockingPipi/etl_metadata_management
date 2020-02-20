@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import pers.jason.etl.rest.dao.ExternalPlatformDao;
 import pers.jason.etl.rest.dao.ExternalSchemaDao;
 import pers.jason.etl.rest.dao.ExternalTableDao;
-import pers.jason.etl.rest.exception.InvalidServiceNameException;
 import pers.jason.etl.rest.pojo.ConnectPioneer;
 import pers.jason.etl.rest.pojo.PlatformType;
 import pers.jason.etl.rest.pojo.SynchronizeModel;
@@ -18,8 +17,6 @@ import pers.jason.etl.rest.service.MetadataService;
 import pers.jason.etl.rest.service.MetadataSynchronizeTemplate;
 import pers.jason.etl.rest.utils.MetadataUtil;
 import pers.jason.etl.rest.utils.PlatformTypeUtil;
-
-import java.util.Map;
 
 /**
  * @author Jason

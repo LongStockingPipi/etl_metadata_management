@@ -1,6 +1,8 @@
 package pers.jason.etl.rest.utils;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import pers.jason.etl.commons.Symbol;
 import pers.jason.etl.rest.pojo.ConnectPioneer;
 import pers.jason.etl.rest.pojo.ExternalColumnType;
@@ -10,6 +12,8 @@ import pers.jason.etl.rest.pojo.PlatformType;
 import pers.jason.etl.rest.pojo.VirtualPlatform;
 import pers.jason.etl.rest.pojo.po.Platform;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -99,5 +103,7 @@ public class MetadataUtil {
     }
     return sb.toString().toLowerCase();
   }
+
+
 
 }

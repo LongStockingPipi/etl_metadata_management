@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Platform extends Metadata {
+public abstract class Platform extends Metadata {
 
   private String url;
 

@@ -1,13 +1,24 @@
 package pers.jason.etl.rest.service;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import pers.jason.etl.commons.Symbol;
 import pers.jason.etl.rest.exception.RequestTimeoutException;
+import pers.jason.etl.rest.pojo.MetadataType;
 import pers.jason.etl.rest.pojo.SynchronizeModel;
 import pers.jason.etl.rest.pojo.ThreadLock;
 import pers.jason.etl.rest.pojo.po.Metadata;
 import pers.jason.etl.rest.pojo.po.Platform;
+import pers.jason.etl.rest.utils.MetadataUtil;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -23,9 +34,9 @@ public abstract class MetadataSynchronizeTemplate {
 
   private static final Logger logger = LoggerFactory.getLogger(MetadataSynchronizeTemplate.class);
 
-  private static final String DATA_MISSING = "missingData";
+  protected static final String DATA_MISSING = "missingData";
 
-  private static final String DATA_REFUND = "refundData";
+  protected static final String DATA_REFUND = "refundData";
 
   private static Lock holderLock = new ReentrantLock();
 
@@ -57,10 +68,65 @@ public abstract class MetadataSynchronizeTemplate {
   protected abstract Platform findDataFromRemote(String url, String username, String password, Long platformId, String schemaName, String tableName);
 
   private Map<String, Set<Metadata>> mergeData(Platform localData, Platform remoteData) {
-    return null;
+    Map<String, Set<Metadata>> diff = Maps.newHashMap();
+    if(null == remoteData) {
+      throw new RuntimeException("外部数据库server无数据");
+    }
+    if(null == localData) {
+      diff.put(DATA_MISSING, remoteData.getChild());
+      return diff;
+    }
+
+    Map<String, CountAndMetadata> middleWare = Maps.newHashMap();
+    //时间复杂度为On
+    registerFullNameInMap(localData, true, middleWare);
+    registerFullNameInMap(remoteData, false, middleWare);
+
+    List<Metadata> refundData = Lists.newArrayList();
+    List<Metadata> missingData = Lists.newArrayList();
+    Set<Map.Entry<String, CountAndMetadata>> entrySet = middleWare.entrySet();
+    Iterator<Map.Entry<String, CountAndMetadata>> iter = entrySet.iterator();
+    while (iter.hasNext()) {
+      Map.Entry<String, CountAndMetadata> entry = iter.next();
+      CountAndMetadata countAndMetadata = entry.getValue();
+      if(1 == countAndMetadata.count) {
+        refundData.add(countAndMetadata.metadata);
+      } else if(-1 == countAndMetadata.count) {
+        missingData.add(countAndMetadata.metadata);
+      }
+    }
+
+    diff.put(DATA_MISSING, Sets.newHashSet(missingData));
+    diff.put(DATA_REFUND, Sets.newHashSet(refundData));
+
+    return diff;
   }
 
-  private void processingData(Map<String, Set<Metadata>> discrepantData) {}
+  /**
+   * 将元数据的fullName放入map中，k是fullName，v是计数器+元数据对象的组合
+   * 最终正反两次计算，标记两次元数据各自独立的数据
+   * @param metadata
+   * @param sign
+   * @param map
+   */
+  private void registerFullNameInMap(final Metadata metadata, boolean sign, Map<String, CountAndMetadata> map) {
+    if(null == map) {
+      map = Maps.newHashMap();
+    }
+
+    Set<Metadata> child = metadata.getChild();
+    if(!CollectionUtils.isEmpty(child)) {
+      for(Metadata data : child) {
+        registerFullNameInMap(data, sign, map);
+      }
+    }
+
+    final String fn = metadata.getFullName();
+    CountAndMetadata v = map.containsKey(fn) ? map.get(fn) : new CountAndMetadata(0, metadata);
+    map.put(fn, sign ? v.incrementCount() : v.decrementCount());
+  }
+
+  protected abstract void processingData(Map<String, Set<Metadata>> discrepantData);
 
   private String getLockKey(Long platformId) {
     return "ETL_METADATA_EXTERNAL_PLATFORM_" + platformId;
@@ -100,6 +166,28 @@ public abstract class MetadataSynchronizeTemplate {
     } finally {
       logger.info(threadName + "释放ReentrantLock锁");
       holderLock.unlock();
+    }
+  }
+
+  class CountAndMetadata {
+
+    private Integer count;
+
+    private Metadata metadata;
+
+    public CountAndMetadata(Integer count, Metadata metadata) {
+      this.count = count;
+      this.metadata = metadata;
+    }
+
+    public CountAndMetadata incrementCount() {
+      this.count++;
+      return this;
+    }
+
+    public CountAndMetadata decrementCount() {
+      this.count--;
+      return this;
     }
   }
 }
