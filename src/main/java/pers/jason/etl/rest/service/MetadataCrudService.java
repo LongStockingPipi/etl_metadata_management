@@ -15,6 +15,8 @@ import java.util.List;
  */
 public interface MetadataCrudService {
 
+  Integer MAX_INSERT_COUNT = 500;
+
   void deleteMetadata(Collection<Metadata> metadataList);
 
   void insertMetadata(Collection<Metadata> metadataList);
@@ -25,9 +27,9 @@ public interface MetadataCrudService {
 
   void deleteColumnById(List<Long> ids);
 
-  List<Schema> insertSchema(List<Schema> schemas);
+  <T extends Schema> void insertSchema(List<T> schemas);
 
-  List<Table> insertTables(List<Table> tables);
+  <T extends Table> void insertTables(List<T> tables);
 
-  List<Column> insertColumns(List<Column> columns);
+  <T extends Column> void insertColumns(List<T> columns);
 }

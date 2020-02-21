@@ -104,6 +104,25 @@ public class MetadataUtil {
     return sb.toString().toLowerCase();
   }
 
+  public static String getParentFullName(String fullName) {
+    if(StringUtils.isNotEmpty(fullName)) {
+      String[] array = fullName.split(Symbol.SIGN_SLASH);
+      if(array.length > 2) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < array.length - 1; i++) {
+          sb.append(array[i]).append(Symbol.SIGN_SLASH);
+        }
+        return sb.deleteCharAt(sb.length() - 1).toString();
+      } else if(array.length == 2) {
+        return fullName;
+      } else {
+        throw new RuntimeException("fullName格式错误");
+      }
+    } else {
+      throw new RuntimeException("fullName不能为空");
+    }
+  }
+
 
 
 }

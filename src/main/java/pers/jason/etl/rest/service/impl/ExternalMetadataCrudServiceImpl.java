@@ -2,17 +2,25 @@ package pers.jason.etl.rest.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import pers.jason.etl.rest.dao.ExternalColumnDao;
+import pers.jason.etl.rest.dao.ExternalPlatformDao;
+import pers.jason.etl.rest.dao.ExternalSchemaDao;
+import pers.jason.etl.rest.dao.ExternalTableDao;
 import pers.jason.etl.rest.pojo.MetadataType;
 import pers.jason.etl.rest.pojo.po.Column;
+import pers.jason.etl.rest.pojo.po.ExternalColumn;
+import pers.jason.etl.rest.pojo.po.ExternalSchema;
+import pers.jason.etl.rest.pojo.po.ExternalTable;
 import pers.jason.etl.rest.pojo.po.Metadata;
 import pers.jason.etl.rest.pojo.po.Schema;
 import pers.jason.etl.rest.pojo.po.Table;
 import pers.jason.etl.rest.service.MetadataCrudService;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +33,20 @@ import java.util.Set;
 @Service
 public class ExternalMetadataCrudServiceImpl implements MetadataCrudService {
 
+  @Autowired
+  private ExternalPlatformDao platformDao;
+
+  @Autowired
+  private ExternalSchemaDao schemaDao;
+
+  @Autowired
+  private ExternalTableDao tableDao;
+
+  @Autowired
+  private ExternalColumnDao columnDao;
+
   @Override
+  @Transactional(rollbackFor = Exception.class)
   public void deleteMetadata(Collection<Metadata> metadataList) {
     if(!CollectionUtils.isEmpty(metadataList)) {
       Set<Long> schemaIds = Sets.newHashSet();
@@ -55,66 +76,103 @@ public class ExternalMetadataCrudServiceImpl implements MetadataCrudService {
   }
 
   @Override
+  @Transactional(rollbackFor = Exception.class)
   public void insertMetadata(Collection<Metadata> metadataList) {
-    List<Metadata> insertSchemas = Lists.newArrayList();
-    List<Metadata> insertTables = Lists.newArrayList();
-    List<Metadata> insertColumns = Lists.newArrayList();
-    List<Metadata> missingData = Lists.newArrayList(metadataList);
-    Collections.sort(missingData);
-    List<String> schemaNames = Lists.newArrayList();
-    List<String> tableNames = Lists.newArrayList();
-    metadataList.forEach(metadata -> {
-      if(MetadataType.SCHEMA.equals(metadata.returnMetadataType())) {
-        insertSchemas.add(metadata);
-        schemaNames.add(metadata.getFullName());
-      } else if(MetadataType.TABLE.equals(metadata.returnMetadataType())) {
-        //todo 判断父对象是否被加载过
-        if(false) {
-          insertTables.add(metadata);
-          tableNames.add(metadata.getFullName());
+    if(!CollectionUtils.isEmpty(metadataList)) {
+      List<Schema> schemas = Lists.newArrayList();
+      List<Table> tables = Lists.newArrayList();
+      List<Column> columns = Lists.newArrayList();
+      metadataList.forEach(metadata -> {
+        MetadataType metadataType = metadata.returnMetadataType();
+        if(MetadataType.SCHEMA.equals(metadataType)) {
+          schemas.add((Schema) metadata);
+        } else if(MetadataType.TABLE.equals(metadataType)) {
+          tables.add((Table) metadata);
+        } else if(MetadataType.COLUMN.equals(metadataType)) {
+          columns.add((Column) metadata);
         }
-      } else if(MetadataType.COLUMN.equals(metadata.returnMetadataType())) {
-        //todo 判断父对象是否被加载过
-        if(false) {
-          insertColumns.add(metadata);
+      });
+
+      insertSchema(schemas);
+      schemas.forEach(schema -> {
+        Set<Metadata> child = schema.getChild();
+        if(!CollectionUtils.isEmpty(child)) {
+          child.forEach(table -> {
+            table.setParentId(schema.getId());
+            tables.add((Table) table);
+          });
         }
-      }
-    });
+      });
 
-    //todo：单独新增的的表或字段，通过目前的实现方式无法获得父ID
+      insertTables(tables);
+      tables.forEach(table -> {
+        Set<Metadata> child = table.getChild();
+        if(!CollectionUtils.isEmpty(child)) {
+          child.forEach(column -> {
+            column.setParentId(table.getId());
+            columns.add((Column) column);
+          });
+        }
+      });
 
-
-
+      insertColumns(columns);
+    }
 
   }
 
   @Override
+  @Transactional(rollbackFor = Exception.class)
   public void deleteSchemaById(List<Long> ids) {
-
+    schemaDao.delete(ids);
   }
 
   @Override
+  @Transactional(rollbackFor = Exception.class)
   public void deleteTableById(List<Long> ids) {
-
+    tableDao.delete(ids);
   }
 
   @Override
+  @Transactional(rollbackFor = Exception.class)
   public void deleteColumnById(List<Long> ids) {
-
+    columnDao.delete(ids);
   }
 
   @Override
-  public List<Schema> insertSchema(List<Schema> schemas) {
-    return null;
+  @Transactional(rollbackFor = Exception.class)
+  public <T extends Schema> void insertSchema(List<T> schemas) {
+    if(!CollectionUtils.isEmpty(schemas)) {
+      List<ExternalSchema> externalSchemas = (List<ExternalSchema>) schemas;
+      List<List<ExternalSchema>> schemaGroups = Lists.partition(externalSchemas, MAX_INSERT_COUNT);
+      for(List<ExternalSchema> group : schemaGroups) {
+        schemaDao.saveAll(group);
+      }
+    }
   }
 
   @Override
-  public List<Table> insertTables(List<Table> tables) {
-    return null;
+  @Transactional(rollbackFor = Exception.class)
+  public <T extends Table> void insertTables(List<T> tables) {
+    if(!CollectionUtils.isEmpty(tables)) {
+      List<ExternalTable> externalTables = (List<ExternalTable>) tables;
+      List<List<ExternalTable>> tableGroups = Lists.partition(externalTables, MAX_INSERT_COUNT);
+      for(List<ExternalTable> group : tableGroups) {
+        tableDao.saveAll(group);
+      }
+    }
   }
 
   @Override
-  public List<Column> insertColumns(List<Column> columns) {
-    return null;
+  @Transactional(rollbackFor = Exception.class)
+  public <T extends Column> void insertColumns(List<T> columns) {
+    if(!CollectionUtils.isEmpty(columns)) {
+      List<ExternalColumn> externalColumns = (List<ExternalColumn>) columns;
+      List<List<ExternalColumn>> columnGroups = Lists.partition(externalColumns, MAX_INSERT_COUNT);
+      for(List<ExternalColumn> group : columnGroups) {
+        columnDao.saveAll(group);
+      }
+    }
   }
+
+
 }

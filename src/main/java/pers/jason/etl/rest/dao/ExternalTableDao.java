@@ -1,7 +1,11 @@
 package pers.jason.etl.rest.dao;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import pers.jason.etl.rest.pojo.po.ExternalSchema;
 import pers.jason.etl.rest.pojo.po.ExternalTable;
+
+import java.util.List;
 
 /**
  * @author Jason
@@ -11,9 +15,10 @@ import pers.jason.etl.rest.pojo.po.ExternalTable;
 @Mapper
 public interface ExternalTableDao {
 
-  ExternalTable save(ExternalTable table);
+  void delete(@Param("ids") List<Long> ids);
 
-  void delete(Long id);
+  void saveAll(List<ExternalTable> tables);
 
+  //todo
   ExternalTable findTable(Long id);
 }

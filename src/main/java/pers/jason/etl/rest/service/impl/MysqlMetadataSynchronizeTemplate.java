@@ -2,11 +2,12 @@ package pers.jason.etl.rest.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import pers.jason.etl.commons.UserUtil;
 import pers.jason.etl.rest.dao.ExternalPlatformDao;
 import pers.jason.etl.rest.exception.PlatformNotFoundException;
 import pers.jason.etl.rest.pojo.ExternalTableType;
@@ -56,8 +57,9 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
 
   @Override
   protected Platform findDataFromLocal(Long platformId, Long schemaId, Long tableId) {
-    Platform platform = (Platform) cacheService.getObj("")
-        .orElse(platformDao.findAll(platformId, schemaId, tableId));
+//    Platform platform = (Platform) cacheService.getObj("")
+//        .orElse(platformDao.findAll(platformId, schemaId, tableId));
+    Platform platform = platformDao.findAll(platformId, schemaId, tableId);
     if(null == platform) {
       throw new PlatformNotFoundException("the platform information is not available locally");
     }
@@ -67,6 +69,7 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
   @Override
   protected Platform findDataFromRemote(
       String url, String username, String password, Long platformId, String schemaName, String tableName) {
+    Long userId = UserUtil.getUserId();
     String sql = getSql(schemaName, tableName);
     ExternalPlatform platform = new ExternalPlatform();
     try(
@@ -74,8 +77,6 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
         PreparedStatement ps = connection.prepareStatement(sql);
         ResultSet rs = ps.executeQuery()
     ) {
-
-
       platform.setId(platformId);
       platform.setTypeCode(PlatformType.MYSQL.code);
       platform.setFullName(MetadataUtil.getExternalMetadataFullName(
@@ -100,6 +101,8 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
           schema = new ExternalSchema();
           schema.setPlatformId(platformId);
           schema.setName(sName);
+          schema.setCreator(userId);
+          schema.setUpdatedBy(userId);
           schema.setFullName(schemaFullName);
           schemas.add(schema);
           schemaMap.put(schemaFullName, schema);
@@ -117,12 +120,16 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
           table.setComments(tableComment);
           table.setFullName(tableFullName);
           table.setName(tName);
+          table.setCreator(userId);
+          table.setUpdatedBy(userId);
           tables.add(table);
           tableMap.put(tableFullName, table);
         }
 
         Set<ExternalColumn> columns = table.getColumnSet();
         ExternalColumn column = getExternalColumnFromResultSet(rs, platformId);
+        column.setCreator(userId);
+        column.setUpdatedBy(userId);
         columns.add(column);
 
       }
@@ -133,13 +140,68 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
   }
 
   @Override
-  protected void processingData(Map<String, Set<Metadata>> discrepantData) {
+  @Transactional(rollbackFor = Exception.class)
+  protected void processingData(Platform localData, Map<String, Set<Metadata>> discrepantData) {
     MetadataCrudService metadataCrudService = synchronizeServiceHolder.findMetadataCrudService(PlatformType.MYSQL);
     Set<Metadata> mis = discrepantData.get(DATA_MISSING);
     Set<Metadata> ref = discrepantData.get(DATA_REFUND);
     metadataCrudService.deleteMetadata(ref);
-    metadataCrudService.insertMetadata(mis);
+
+    if(!CollectionUtils.isEmpty(mis)) {
+      List<Metadata> missingData =
+          removeRedundancyMetadataAndSetParentId(localData, Lists.newArrayList(mis));
+      metadataCrudService.insertMetadata(missingData);
+    }
+
     //todo 更新缓存
+  }
+
+  /**
+   * 去除重复数据
+   * 为新数据添加父ID
+   * 时间复杂度(n*m)
+   * @param localData
+   * @param missingData
+   * @return
+   */
+  private List<Metadata> removeRedundancyMetadataAndSetParentId(Platform localData, List<Metadata> missingData) {
+    //排序，保证元数据顺序是p-s-t-c
+    Collections.sort(missingData);
+
+    //准备已存在的元数据id映射关系
+    Map<String, Long> fullNameAndId = Maps.newHashMap();
+    registerFullNameAndIdInMap(localData, fullNameAndId);
+
+    //去重后的fullName集合
+    List<String> names = Lists.newArrayList();
+    //去重后的metadata集合
+    List<Metadata> newMetadata = Lists.newArrayList();
+    missingData.forEach(metadata -> {
+      if(null != metadata && null == metadata.getId()) {
+        String fullName = metadata.getFullName();
+        String parentFullName = MetadataUtil.getParentFullName(fullName);
+        if(!names.contains(parentFullName)) {
+          if(null == metadata.getId()) { //为新数据查询父ID
+            metadata.setParentId(fullNameAndId.get(parentFullName));
+          }
+          newMetadata.add(metadata);
+        }
+      }
+    });
+    return newMetadata;
+  }
+
+
+
+  private void registerFullNameAndIdInMap(Metadata metadata, Map<String, Long> map) {
+    Set<Metadata> child = metadata.getChild();
+    if(!CollectionUtils.isEmpty(child)) {
+      for(Metadata data : child) {
+        registerFullNameAndIdInMap(data, map);
+      }
+    }
+
+    map.put(metadata.getFullName(), metadata.getId());
   }
 
   private ExternalColumn getExternalColumnFromResultSet(final ResultSet rs, Long platformId) throws SQLException {

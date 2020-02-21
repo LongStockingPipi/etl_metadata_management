@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pers.jason.etl.rest.dao.ExternalTableDao">
+
+    <insert id="saveAll" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_etl_metadata_external_table
+        (t_id, t_name, t_c_name, schema_id, is_writable, created_at, created_by,
+        updated_at, updated_by, comments, type_code, status, init_commands)
+        VALUES
+        <foreach collection="list" item="table" separator=",">
+            (
+            #{table.id}, #{table.name}, #{table.cName}, #{table.schemaId}, #{schema.createdTime}
+            , #{schema.creator}, #{schema.updatedTime}, #{schema.updatedBy}, #{schema.comments}
+            , #{schema.type}, #{schema.status}, #{schema.initCommands}
+            )
+        </foreach>
+    </insert>
+
+    <update id="delete">
+        update t_etl_metadata_external_table set status = false where 1=2
+        <if test="null != ids and ids.size() > 0">
+            or t_id in
+            <foreach collection="ids" item="id" index="no" open="("
+                     separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </update>
+
+</mapper>

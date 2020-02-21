@@ -16,9 +16,9 @@ public interface ExternalPlatformDao {
 
   ExternalPlatform save(ExternalPlatform platform);
 
-  ExternalPlatform saveAll(List<ExternalPlatform> platforms);
+  void saveAll(List<ExternalPlatform> platforms);
 
-  void delete(Long id);
+  void delete(@Param("ids") List<Long> ids);
 
   /**
    *

@@ -54,25 +54,25 @@ public abstract class Metadata implements Serializable, Comparable {
     Metadata metadata =(Metadata)o;
     return this.fullName.compareTo(metadata.fullName);
   }
-//
-//  public static void main(String[] args) {
-//    Metadata metadata1 = new ExternalPlatform();
-//    Metadata metadata2 = new ExternalSchema();
-//    Metadata metadata3 = new ExternalSchema();
-//    Metadata metadata4 = new ExternalSchema();
-//    Metadata metadata5 = new ExternalTable();
-//
-//    metadata1.setFullName("/p_1");
-//    metadata2.setFullName("/p_1/s_test_010");
-//    metadata3.setFullName("/p_1/s_2");
-//    metadata4.setFullName("/p_1/s_test_99");
-//    metadata5.setFullName("/p_1/t_2/t1");
-//
-//    List<Metadata> list = Lists.newArrayList(metadata1, metadata2, metadata3, metadata4, metadata5);
-//    Collections.sort(list);
-//    list.forEach(metadata -> {
-//        System.out.println(metadata.getFullName());
-//    });
-//  }
+
+  public static void main(String[] args) {
+    Metadata metadata1 = new ExternalPlatform();
+    Metadata metadata2 = new ExternalSchema();
+    Metadata metadata3 = new ExternalSchema();
+    Metadata metadata4 = new ExternalSchema();
+    Metadata metadata5 = new ExternalTable();
+
+    metadata1.setFullName("/p_1");
+    metadata2.setFullName("/p_1/s_test_010");
+    metadata3.setFullName("/p_1/s_2");
+    metadata4.setFullName("/p_1/s_test_99");
+    metadata5.setFullName("/p_1/t_2/t1");
+
+    List<Metadata> list = Lists.newArrayList(metadata1, metadata2, metadata3, metadata4, metadata5);
+    Collections.sort(list);
+    list.forEach(metadata -> {
+        System.out.println(metadata.getFullName());
+    });
+  }
 
 }

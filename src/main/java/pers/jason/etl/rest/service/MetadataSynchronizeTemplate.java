@@ -56,7 +56,7 @@ public abstract class MetadataSynchronizeTemplate {
     Platform remoteData = findDataFromRemote(synchronizeModel.getUrl(), synchronizeModel.getUsername(), synchronizeModel.getPassword()
         , platformId, synchronizeModel.getSchemaName(), synchronizeModel.getTableName());
     Map<String, Set<Metadata>> discrepantData = mergeData(localData, remoteData);
-    processingData(discrepantData);
+    processingData(localData, discrepantData);
 //      logger.info(threadName + "结束同步数据");
 //    }
 //    //释放锁
@@ -78,10 +78,11 @@ public abstract class MetadataSynchronizeTemplate {
     }
 
     Map<String, CountAndMetadata> middleWare = Maps.newHashMap();
-    //时间复杂度为On
+    //组装map，时间复杂度为On
     registerFullNameInMap(localData, true, middleWare);
     registerFullNameInMap(remoteData, false, middleWare);
 
+    //分类元数据，时间复杂度为On
     List<Metadata> refundData = Lists.newArrayList();
     List<Metadata> missingData = Lists.newArrayList();
     Set<Map.Entry<String, CountAndMetadata>> entrySet = middleWare.entrySet();
@@ -102,6 +103,8 @@ public abstract class MetadataSynchronizeTemplate {
     return diff;
   }
 
+
+
   /**
    * 将元数据的fullName放入map中，k是fullName，v是计数器+元数据对象的组合
    * 最终正反两次计算，标记两次元数据各自独立的数据
@@ -110,10 +113,6 @@ public abstract class MetadataSynchronizeTemplate {
    * @param map
    */
   private void registerFullNameInMap(final Metadata metadata, boolean sign, Map<String, CountAndMetadata> map) {
-    if(null == map) {
-      map = Maps.newHashMap();
-    }
-
     Set<Metadata> child = metadata.getChild();
     if(!CollectionUtils.isEmpty(child)) {
       for(Metadata data : child) {
@@ -126,7 +125,7 @@ public abstract class MetadataSynchronizeTemplate {
     map.put(fn, sign ? v.incrementCount() : v.decrementCount());
   }
 
-  protected abstract void processingData(Map<String, Set<Metadata>> discrepantData);
+  protected abstract void processingData(Platform localData, Map<String, Set<Metadata>> discrepantData);
 
   private String getLockKey(Long platformId) {
     return "ETL_METADATA_EXTERNAL_PLATFORM_" + platformId;

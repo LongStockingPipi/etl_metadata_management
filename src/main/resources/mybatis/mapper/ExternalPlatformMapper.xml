@@ -5,25 +5,34 @@
     <insert id="save" parameterType="pers.jason.etl.rest.pojo.po.ExternalPlatform"
             useGeneratedKeys="true" keyProperty="id">
         insert into t_etl_metadata_external_platform (
-        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by, comments
+        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by, comments, status
         ) values ( #{id}, #{name}, #{typeCode}, #{url}, #{username}, #{passwd}, #{createdTime}, #{creator}, #{updatedTime}
-        , #{updatedBy}, #{comments})
+        , #{updatedBy}, #{comments}, #{status})
     </insert>
 
     <insert id="saveAll" useGeneratedKeys="true" keyProperty="id">
         insert into t_etl_metadata_external_platform (
-        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by, comments
+        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by
+        , comments, status
         ) values
         <foreach collection="list" item="platform" separator=",">
         (
             #{platform.id}, #{platform.name}, #{platform.typeCode}, #{platform.url}, #{platform.username}, #{platform.passwd}
             , #{platform.createdTime}, #{platform.creator}, #{platform.updatedTime}, #{platform.updatedBy}, #{platform.comments}
+            , #{platform.status}
         )
         </foreach>
     </insert>
 
     <update id="delete">
-        update t_etl_metadata_external_platform set status = false where p_id = #{id}
+        update t_etl_metadata_external_platform set status = false where 1=2
+        <if test="null != ids and ids.size() > 0">
+            or p_id in
+            <foreach collection="ids" item="id" index="no" open="("
+                     separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
     </update>
 
     <select id="findPlatform" resultMap="PLATFORM_MAP">
