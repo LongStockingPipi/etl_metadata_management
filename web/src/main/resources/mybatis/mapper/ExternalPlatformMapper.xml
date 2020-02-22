@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pers.jason.etl.metadatamanager.web.rest.dao.ExternalPlatformDao">
+
+    <insert id="save" parameterType="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into t_etl_metadata_external_platform (
+        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by, comments, status
+        ) values ( #{id}, #{name}, #{typeCode}, #{url}, #{username}, #{passwd}, #{createdTime}, #{creator}, #{updatedTime}
+        , #{updatedBy}, #{comments}, #{status})
+    </insert>
+
+    <insert id="saveAll" useGeneratedKeys="true" keyProperty="id">
+        insert into t_etl_metadata_external_platform (
+        p_id, p_name, type_code, connect_url, username, passwd, created_at, created_by, updated_at, updated_by
+        , comments, status
+        ) values
+        <foreach collection="list" item="platform" separator=",">
+        (
+            #{platform.id}, #{platform.name}, #{platform.typeCode}, #{platform.url}, #{platform.username}, #{platform.passwd}
+            , #{platform.createdTime}, #{platform.creator}, #{platform.updatedTime}, #{platform.updatedBy}, #{platform.comments}
+            , #{platform.status}
+        )
+        </foreach>
+    </insert>
+
+    <update id="delete">
+        update t_etl_metadata_external_platform set status = false where 1=2
+        <if test="null != ids and ids.size() > 0">
+            or p_id in
+            <foreach collection="ids" item="id" index="no" open="("
+                     separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </update>
+
+    <select id="findPlatform" resultMap="PLATFORM_MAP">
+        SELECT p_id, type_code, p_name, connect_url, username, passwd, created_at, created_by,
+            updated_at, updated_by, comments, concat('/', type_code, '_', p_id) as full_name
+        FROM t_etl_metadata_external_platform where status = true and p_id = #{id};
+    </select>
+
+    <select id="findAll" resultMap="METADATA_MAP">
+        select
+        p.p_id, p.type_code as p_type_code, p.p_name, p.connect_url, p.username, p.passwd, p.created_at as p_created_at
+        , p.created_by as p_created_by, p.updated_at as p_updated_at, p.updated_by as p_updated_by, p.comments as p_comments,
+
+        s.s_id, s.platform_id, s.s_name, s.s_c_name, s.created_at as s_created_at, s.created_by as s_created_by
+        , s.updated_at as s_updated_at, s.updated_by as s_updated_by, s.comments as s_comments, s.init_commands as s_init_commands,
+
+        t.t_id, t.t_name, t.t_c_name, t.schema_id, t.is_writable, t.created_at, t.created_by as t_created_by, t.init_commands as t_init_commands
+        , t.updated_at as t_updated_at, t.updated_by as t_updated_by, t.comments as t_comments, t.type_code as t_type_code,
+
+        c.c_id, c.c_name, c.c_c_name, c.type_code as c_type_code, c.is_partition_field, c.is_primary_key, c.is_nullable, c.max_length,
+        c.numeric_scale, c.table_id, c.position as c_position, c.created_at as c_created_at, c.created_by as c_created_by
+        , c.updated_at as c_updated_at, c.updated_by as c_updated_by, c.comments as c_comments
+        , lower(concat('/metadata_external_', p_id)) as p_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name)) as s_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code)) as t_full_name
+        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code, '/', c.c_name, '_', c.type_code, '_', c.position)) as c_full_name
+        from t_etl_metadata_external_platform p
+        left join t_etl_metadata_external_schema s on s.platform_id = p.p_id and s.status = true
+        <if test="null != schemaId">
+            and s.s_id = #{schemaId}
+        </if>
+        left join t_etl_metadata_external_table t on t.schema_id = s.s_id and t.status = true
+        <if test="null != tableId">
+            and t.t_id = #{tableId}
+        </if>
+        left join t_etl_metadata_external_column c on c.table_id = t.t_id and c.status = true
+        where p.status = true and p.p_id = #{platformId}
+    </select>
+
+    <resultMap id="PLATFORM_MAP" type="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform">
+        <id column="p_id" property="id"/>
+        <result column="type_code" property="typeCode"/>
+        <result column="p_name" property="name"/>
+        <result column="connect_url" property="url"/>
+        <result column="username" property="username"/>
+        <result column="passwd" property="passwd"/>
+        <result column="created_at" property="createdTime"/>
+        <result column="created_by" property="creator"/>
+        <result column="updated_at" property="updatedTime"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="comments" property="comments"/>
+        <result column="full_name" property="fullName"/>
+    </resultMap>
+
+    <resultMap id="METADATA_MAP" type="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform">
+        <id column="p_id" property="id"/>
+        <result column="p_type_code" property="typeCode"/>
+        <result column="p_name" property="name"/>
+        <result column="connect_url" property="url"/>
+        <result column="username" property="username"/>
+        <result column="passwd" property="passwd"/>
+        <result column="p_created_at" property="createdTime"/>
+        <result column="p_created_by" property="creator"/>
+        <result column="p_updated_at" property="updatedTime"/>
+        <result column="p_updated_by" property="updatedBy"/>
+        <result column="p_comments" property="comments"/>
+        <result column="p_full_name" property="fullName"/>
+        <collection property="schemaSet" ofType="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalSchema" javaType="java.util.Set">
+            <id column="s_id" property="id"/>
+            <result column="s_name" property="name"/>
+            <result column="s_created_at" property="createdTime"/>
+            <result column="s_created_by" property="creator"/>
+            <result column="s_updated_at" property="updatedTime"/>
+            <result column="s_updated_by" property="updatedBy"/>
+            <result column="s_comments" property="comments"/>
+            <result column="s_full_name" property="fullName"/>
+            <result column="platform_id" property="platformId"/>
+            <result column="s_c_name" property="cName"/>
+            <result column="s_init_commands" property="initCommands"/>
+            <collection property="tableSet" ofType="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTable" javaType="java.util.Set">
+                <id column="t_id" property="id"/>
+                <result column="t_name" property="name"/>
+                <result column="t_created_at" property="createdTime"/>
+                <result column="t_created_by" property="creator"/>
+                <result column="t_updated_at" property="updatedTime"/>
+                <result column="t_updated_by" property="updatedBy"/>
+                <result column="t_comments" property="comments"/>
+                <result column="t_full_name" property="fullName"/>
+                <result column="schema_id" property="schemaId"/>
+                <result column="is_writable" property="writable"/>
+                <result column="t_c_name" property="cName"/>
+                <result column="t_type_code" property="type"/>
+                <result column="t_init_commands" property="initCommands"/>
+                <collection property="columnSet" ofType="pers.jason.etl.metadatamanager.core.synchronize.external.ExternalColumn" javaType="java.util.Set">
+                    <id column="c_id" property="id"/>
+                    <result column="c_name" property="name"/>
+                    <result column="c_created_at" property="createdTime"/>
+                    <result column="c_created_by" property="creator"/>
+                    <result column="c_updated_at" property="updatedTime"/>
+                    <result column="c_updated_by" property="updatedBy"/>
+                    <result column="c_comments" property="comments"/>
+                    <result column="c_full_name" property="fullName"/>
+                    <result column="table_id" property="tableId"/>
+                    <result column="c_c_name" property="cName"/>
+                    <result column="c_type_code" property="type"/>
+                    <result column="is_partition_field" property="partitionField"/>
+                    <result column="is_primary_key" property="primaryKey"/>
+                    <result column="is_nullable" property="nullable"/>
+                    <result column="max_length" property="maxLength"/>
+                    <result column="numeric_scale" property="numericScale"/>
+                    <result column="c_position" property="position"/>
+                </collection>
+            </collection>
+        </collection>
+    </resultMap>
+
+</mapper>
