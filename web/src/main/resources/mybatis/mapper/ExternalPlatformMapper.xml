@@ -55,10 +55,10 @@
         c.c_id, c.c_name, c.c_c_name, c.type_code as c_type_code, c.is_partition_field, c.is_primary_key, c.is_nullable, c.max_length,
         c.numeric_scale, c.table_id, c.position as c_position, c.created_at as c_created_at, c.created_by as c_created_by
         , c.updated_at as c_updated_at, c.updated_by as c_updated_by, c.comments as c_comments
-        , lower(concat('/metadata_external_', p_id)) as p_full_name
-        , lower(concat('/metadata_external_', p_id, '/', s.s_name)) as s_full_name
-        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code)) as t_full_name
-        , lower(concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code, '/', c.c_name, '_', c.type_code, '_', c.position)) as c_full_name
+        , concat('/metadata_external_', p_id) as p_full_name
+        , concat('/metadata_external_', p_id, '/', s.s_name) as s_full_name
+        , concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code) as t_full_name
+        , concat('/metadata_external_', p_id, '/', s.s_name, '/', t.t_name, '_', t.type_code, '/', c.c_name, '_', c.type_code, '_', c.position) as c_full_name
         from t_etl_metadata_external_platform p
         left join t_etl_metadata_external_schema s on s.platform_id = p.p_id and s.status = true
         <if test="null != schemaId">

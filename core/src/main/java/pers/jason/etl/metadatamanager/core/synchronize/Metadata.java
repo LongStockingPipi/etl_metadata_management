@@ -1,15 +1,13 @@
 package pers.jason.etl.metadatamanager.core.synchronize;
 
-import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import pers.jason.etl.metadatamanager.core.support.MetadataType;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -55,4 +53,16 @@ public abstract class Metadata implements Serializable, Comparable {
     return this.fullName.compareTo(metadata.fullName);
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Metadata metadata = (Metadata) o;
+    return Objects.equals(fullName, metadata.fullName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fullName);
+  }
 }

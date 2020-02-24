@@ -24,7 +24,17 @@ public class Sql {
           "left join INFORMATION_SCHEMA.TABLES t on s.schema_name = t.table_schema " +
           "left join INFORMATION_SCHEMA.COLUMNS c on t.table_name = c.table_name and c.TABLE_SCHEMA = s.schema_name " +
           "where s.schema_name not in ('sys', 'SYS', 'mysql', 'information_schema', 'performance_schema', 'MYSQL', 'INFORMATION_SCHEMA', 'PERFORMANCE_SCHEMA')";
-  public static final String SQL_MYSQL_FIND_METADATA_BY_SCHEMA = "";
+
+  public static final String SQL_MYSQL_FIND_METADATA_BY_SCHEMA =
+      " select s.schema_name as schema_name, t.table_name as table_name " +
+          ", t.table_comment, c.column_name as column_name, t.table_type " +
+          ", c.ordinal_position, c.numeric_precision, c.numeric_scale, c.is_nullable " +
+          ", c.data_type, c.column_key, c.character_maximum_length, c.column_comment " +
+          "from INFORMATION_SCHEMA.SCHEMATA s " +
+          "left join INFORMATION_SCHEMA.TABLES t on s.schema_name = t.table_schema " +
+          "left join INFORMATION_SCHEMA.COLUMNS c on t.table_name = c.table_name and c.TABLE_SCHEMA = s.schema_name " +
+          "where s.schema_name in (%s)";
+
   public static final String SQL_MYSQL_FIND_METADATA_BY_TABLE = "";
 
   public class MySqlColumnLabel {

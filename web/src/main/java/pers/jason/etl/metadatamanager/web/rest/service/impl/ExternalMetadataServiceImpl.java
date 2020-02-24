@@ -169,7 +169,11 @@ public class ExternalMetadataServiceImpl implements MetadataCrudService {
       List<ExternalColumn> externalColumns = (List<ExternalColumn>) columns;
       List<List<ExternalColumn>> columnGroups = Lists.partition(externalColumns, MAX_INSERT_COUNT);
       for(List<ExternalColumn> group : columnGroups) {
-        columnDao.saveAll(group);
+        try {
+          columnDao.saveAll(group);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
     }
   }

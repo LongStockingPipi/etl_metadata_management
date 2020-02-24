@@ -3,8 +3,11 @@ package pers.jason.etl.metadatamanager.web.rest.service.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import pers.jason.etl.metadatamanager.core.cache.CacheTemplate;
@@ -33,6 +36,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -141,17 +145,21 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
     return platform;
   }
 
+  private static final Logger logger = LoggerFactory.getLogger(MysqlMetadataSynchronizeTemplate.class);
+
   @Override
   @Transactional(rollbackFor = Exception.class)
-  protected void processingData(Platform localData, Map<String, Set<Metadata>> discrepantData) {
+  protected void processingData(Platform localData, Map<String, List<Metadata>> discrepantData) {
     MetadataCrudService metadataCrudService = synchronizeServiceHolder.findMetadataCrudService(PlatformType.MYSQL);
-    Set<Metadata> mis = discrepantData.get(DATA_MISSING);
-    Set<Metadata> ref = discrepantData.get(DATA_REFUND);
+    List<Metadata> mis = discrepantData.get(DATA_MISSING);
+    List<Metadata> ref = discrepantData.get(DATA_REFUND);
+    logger.info(Thread.currentThread().getName() + "本地缺失数据：" + mis.size() + "；本地多余数据：" + ref.size());
     metadataCrudService.deleteMetadata(ref);
 
     if(!CollectionUtils.isEmpty(mis)) {
       List<Metadata> missingData =
           removeRedundancyMetadataAndSetParentId(localData, Lists.newArrayList(mis));
+
       metadataCrudService.insertMetadata(missingData);
     }
 
@@ -179,6 +187,8 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
     missingData.forEach(metadata -> {
       names.add(metadata.getFullName());
     });
+    Collections.sort(names);
+
     //去重后的metadata集合
     List<Metadata> newMetadata = Lists.newArrayList();
     missingData.forEach(metadata -> {
@@ -246,7 +256,7 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
       return Sql.SQL_MYSQL_FIND_METADATA_BY_PLATFORM;
     } else {
       if(StringUtils.isEmpty(tableName)) {
-        return Sql.SQL_MYSQL_FIND_METADATA_BY_SCHEMA;
+        return String.format(Sql.SQL_MYSQL_FIND_METADATA_BY_SCHEMA, "'" + schemaName + "'");
       } else {
         return Sql.SQL_MYSQL_FIND_METADATA_BY_TABLE;
       }

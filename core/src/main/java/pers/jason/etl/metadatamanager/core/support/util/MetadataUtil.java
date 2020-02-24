@@ -99,7 +99,7 @@ public class MetadataUtil {
         }
       }
     }
-    return sb.toString().toLowerCase();
+    return sb.toString();
   }
 
   public static String getParentFullName(String fullName) {
