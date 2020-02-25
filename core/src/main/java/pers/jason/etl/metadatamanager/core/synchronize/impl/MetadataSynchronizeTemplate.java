@@ -2,25 +2,20 @@ package pers.jason.etl.metadatamanager.core.synchronize.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import pers.jason.etl.metadatamanager.core.support.SynchronizeModel;
-import pers.jason.etl.metadatamanager.core.support.exception.RequestTimeoutException;
 import pers.jason.etl.metadatamanager.core.synchronize.Metadata;
 import pers.jason.etl.metadatamanager.core.synchronize.MetadataSynchronize;
 import pers.jason.etl.metadatamanager.core.synchronize.Platform;
-import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalSchema;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -36,36 +31,37 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
 
   protected static final String DATA_REFUND = "refundData";
 
-  private static Lock holderLock = new ReentrantLock();
-
-
   private static final ConcurrentHashMap<String, ThreadLock> lockMap = new ConcurrentHashMap<>();
 
-
+  /**
+   * 抽象同步方法
+   * 当前锁竞争机制只适合单节点发布，如果使用分布式，需要分布式锁解决方案
+   * @param synchronizeModel
+   * @throws InterruptedException
+   */
   @Override
   public final void synchronize(SynchronizeModel synchronizeModel) throws InterruptedException {
     String threadName = Thread.currentThread().getName();
     Long platformId = synchronizeModel.getPlatformId();
     String lockName = "sync_lock_name_" + platformId;
-
     ThreadLock syncLock = lockMap.computeIfAbsent(lockName, k -> new ThreadLock(platformId));
+
     Platform remoteData = findDataFromRemote(synchronizeModel.getUrl(), synchronizeModel.getUsername(), synchronizeModel.getPassword()
         , platformId, synchronizeModel.getSchemaName(), synchronizeModel.getTableName());
 
-
-    System.out.println(threadName + "：开始申请锁" + syncLock.getPlatform());
+    logger.info(threadName + "：开始申请锁" + syncLock.getPlatform());
     if(syncLock.tryLock(15, TimeUnit.SECONDS)) {
-      System.out.println(threadName + "：申请锁成功" + syncLock.getPlatform());
+      logger.info(threadName + "：申请锁成功" + syncLock.getPlatform());
       try {
         Platform localData = findDataFromLocal(platformId, synchronizeModel.getSchemaId(), synchronizeModel.getTableId());
         Map<String, List<Metadata>> discrepantData = mergeData(localData, remoteData);
         processingData(localData, discrepantData);
       } finally {
-        System.out.println(threadName + "：运行完成" + syncLock.getPlatform());
+        logger.info(threadName + "：运行完成" + syncLock.getPlatform());
         syncLock.unlock();
       }
     } else {
-      System.out.println("请求超时");
+      logger.info(threadName + "：同步超时" + syncLock.getPlatform());
     }
 
   }
@@ -131,47 +127,6 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
     CountAndMetadata v = map.containsKey(fn) ? map.get(fn) : new CountAndMetadata(0, metadata);
     map.put(fn, sign ? v.incrementCount() : v.decrementCount());
   }
-
-  private String getLockKey(Long platformId) {
-    return "ETL_METADATA_EXTERNAL_PLATFORM_" + platformId;
-  }
-
-//  private ThreadLock getThreadLock(Long platformId) throws InterruptedException {
-//    String threadName = Thread.currentThread().getName();
-//    ThreadLock lock;
-//    String lockKey = getLockKey(platformId);
-//    if(holderLock.tryLock(8, TimeUnit.SECONDS)) {
-//      logger.info(threadName + "获得ReentrantLock锁");
-//      try {
-//        Long end = System.currentTimeMillis() + 5000;
-//        do {
-//          lock = connectionHolder.get().get(lockKey);
-//        } while (null == lock && System.currentTimeMillis() - end < 0);
-//        lock = new ThreadLock();
-//        connectionHolder.get().put(lockKey, lock);
-//        logger.info(threadName + "获得ThreadLock锁");
-//        return lock;
-//      } finally {
-//        logger.info(threadName + "释放ReentrantLock锁");
-//        holderLock.unlock();
-//      }
-//    }
-//    throw new RequestTimeoutException("request timeout, please try again later");
-//  }
-
-//  private void releaseThreadLock(Long platformId) {
-//    String threadName = Thread.currentThread().getName();
-//    String lockKey = getLockKey(platformId);
-//    holderLock.lock();
-//    logger.info(threadName + "获得ReentrantLock锁");
-//    try {
-//      connectionHolder.get().remove(lockKey);
-//      logger.info(threadName + "释放ThreadLock锁");
-//    } finally {
-//      logger.info(threadName + "释放ReentrantLock锁");
-//      holderLock.unlock();
-//    }
-//  }
 
   class CountAndMetadata {
 

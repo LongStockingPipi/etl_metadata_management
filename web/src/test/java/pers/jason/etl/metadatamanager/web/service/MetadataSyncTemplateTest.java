@@ -68,7 +68,7 @@ public class MetadataSyncTemplateTest {
 
   private SynchronizeModel getSynchronizeModelRemote() {
     SynchronizeModel synchronizeModel = new SynchronizeModel();
-    
+    synchronizeModel.setUrl("jdbc:mysql://47.100.102.187:3306?serverTimezone=UTC");
     synchronizeModel.setUsername("root");
     synchronizeModel.setPassword("Hongdou@521");
     synchronizeModel.setDriverName("com.mysql.jdbc.Driver");

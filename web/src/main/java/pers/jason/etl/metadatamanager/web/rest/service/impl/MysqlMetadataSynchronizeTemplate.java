@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import pers.jason.etl.metadatamanager.core.cache.CacheTemplate;
@@ -36,7 +35,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -56,15 +54,10 @@ public class MysqlMetadataSynchronizeTemplate extends MetadataSynchronizeTemplat
   private ExternalPlatformDao platformDao;
 
   @Autowired
-  private CacheTemplate cacheService;
-
-  @Autowired
   private SynchronizeServiceHolder synchronizeServiceHolder;
 
   @Override
   protected Platform findDataFromLocal(Long platformId, Long schemaId, Long tableId) {
-//    Platform platform = (Platform) cacheService.getObj("")
-//        .orElse(platformDao.findAll(platformId, schemaId, tableId));
     Platform platform = platformDao.findAll(platformId, schemaId, tableId);
     if(null == platform) {
       throw new PlatformNotFoundException("the platform information is not available locally");
