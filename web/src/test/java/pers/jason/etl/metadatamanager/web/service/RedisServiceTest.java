@@ -1,13 +1,14 @@
 package pers.jason.etl.metadatamanager.web.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.checkerframework.checker.units.qual.A;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import pers.jason.etl.metadatamanager.core.cache.CacheTemplate;
+import pers.jason.etl.metadatamanager.web.rest.service.impl.RedisServiceImpl;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Jason
@@ -18,7 +19,7 @@ import pers.jason.etl.metadatamanager.core.cache.CacheTemplate;
 public class RedisServiceTest {
 
   @Autowired
-  private CacheTemplate cacheService;
+  private RedisServiceImpl cacheService;
 
   @Test
   public void testForSaveAndGet() {
@@ -27,6 +28,49 @@ public class RedisServiceTest {
 
     assert "jason".equals(cacheService.getObj("name").orElse(""));
     assert 27 == ((Person) cacheService.getObj("user_1").orElse(null)).getAge();
+
+  }
+
+  @Test
+  public void testForDistributedLock() {
+    final int threadSize = 10;
+    CountDownLatch countDownLatch = new CountDownLatch(threadSize);
+    CountDownLatch countDownLatch2 = new CountDownLatch(threadSize);
+
+    String lockName = "sync_lock";
+    long timeOut = 15000; //依赖锁竞争强度
+    long expireTime = 10; //依赖平均执行时间
+    ExecutorService threadPool = Executors.newFixedThreadPool(threadSize);
+    for (int i = 0; i < threadSize; i++) {
+      threadPool.submit(() -> {
+        String threadName = Thread.currentThread().getName();
+        countDownLatch.countDown();
+        String v = cacheService.tryGetDistributedLockWithLUA(lockName, timeOut, expireTime);
+        if(StringUtils.isEmpty(v)) {
+          System.out.println(threadName + "获取锁超时");
+        } else {
+          System.out.println(threadName + "获取锁成功");
+          try {
+            Thread.sleep(2000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          } finally {
+            cacheService.releaseLockWithLUA(lockName, v);
+            System.out.println(threadName + "释放锁");
+          }
+        }
+        countDownLatch2.countDown();
+      });
+    }
+
+    try {
+      countDownLatch.await();
+      countDownLatch2.await();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      threadPool.shutdownNow();
+    }
   }
 
 }
