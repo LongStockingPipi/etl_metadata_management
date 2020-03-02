@@ -56,4 +56,12 @@ public class ExternalColumn extends Column {
     return MetadataType.COLUMN;
   }
 
+  @Override
+  public String toString() {
+    return "ExternalColumn{" +
+        "id= " + super.getId() + ", name=" + super.getName() + "tableId=" + tableId +
+        ", type=" + type +
+        ", position=" + position +
+        ", fullName=" + super.getFullName() + "}";
+  }
 }

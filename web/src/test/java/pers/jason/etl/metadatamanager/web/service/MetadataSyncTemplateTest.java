@@ -3,9 +3,17 @@ package pers.jason.etl.metadatamanager.web.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import pers.jason.etl.metadatamanager.core.support.Symbol;
 import pers.jason.etl.metadatamanager.core.support.SynchronizeModel;
+import pers.jason.etl.metadatamanager.core.support.util.MetadataUtil;
+import pers.jason.etl.metadatamanager.core.synchronize.Metadata;
+import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform;
 import pers.jason.etl.metadatamanager.core.synchronize.impl.MetadataSynchronizeTemplate;
+import pers.jason.etl.metadatamanager.web.MetadataUnitUtil;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -24,6 +32,34 @@ public class MetadataSyncTemplateTest {
 
   @Autowired
   private MetadataSynchronizeTemplate template;
+
+
+
+  @Test
+  public void testForRegisterFullNameInMap() {
+    //prepare 800000 data
+    ExternalPlatform platform1 = new ExternalPlatform();
+    platform1.setTypeCode(0);
+    platform1.setId(1L);
+    platform1.setName("platform_1");
+    platform1.setFullName(Symbol.SIGN_SLASH + MetadataUtil.METADATA_EXTERNAL_FULL_NAME_PREFIX + 1L);
+    platform1.setSchemaSet(MetadataUnitUtil.getSchema(platform1.getFullName(), 1L, 3000, 1L));
+
+
+
+    ExternalPlatform platform2 = new ExternalPlatform();
+    platform2.setTypeCode(0);
+    platform2.setId(2L);
+    platform2.setName("platform_2");
+    platform2.setFullName(Symbol.SIGN_SLASH + MetadataUtil.METADATA_EXTERNAL_FULL_NAME_PREFIX + 2L);
+    platform2.setSchemaSet(MetadataUnitUtil.getSchema(platform2.getFullName(), 2L, 3000, 1L));
+
+
+    Long start = System.currentTimeMillis();
+    Map<String, List<Metadata>> map = template.mergeData(platform1, platform2);
+    System.out.println("消耗时间：" + (System.currentTimeMillis() - start));
+    System.out.println("本地缺失数据：" + map.get("missingData").size() + "; 本地多余数据：" + map.get("refundData").size());
+  }
 
   @Test
   public void successForSync() {

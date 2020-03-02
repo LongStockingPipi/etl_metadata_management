@@ -31,6 +31,8 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
 
   protected static final String DATA_REFUND = "refundData";
 
+  private static final String SYNC_LOCK_NAME_PREFIX = "sync_lock_name_";
+
   private static final ConcurrentHashMap<String, ThreadLock> lockMap = new ConcurrentHashMap<>();
 
   /**
@@ -43,7 +45,7 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
   public final void synchronize(SynchronizeModel synchronizeModel) throws InterruptedException {
     String threadName = Thread.currentThread().getName();
     Long platformId = synchronizeModel.getPlatformId();
-    String lockName = "sync_lock_name_" + platformId;
+    String lockName = SYNC_LOCK_NAME_PREFIX + platformId;
     ThreadLock syncLock = lockMap.computeIfAbsent(lockName, k -> new ThreadLock(platformId));
 
     Platform remoteData = findDataFromRemote(synchronizeModel.getUrl(), synchronizeModel.getUsername(), synchronizeModel.getPassword()
@@ -70,7 +72,7 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
 
   protected abstract Platform findDataFromRemote(String url, String username, String password, Long platformId, String schemaName, String tableName);
 
-  private Map<String, List<Metadata>> mergeData(Platform localData, Platform remoteData) {
+  public Map<String, List<Metadata>> mergeData(Platform localData, Platform remoteData) {
     Map<String, List<Metadata>> diff = Maps.newHashMap();
     if(null == remoteData) {
       throw new RuntimeException("外部数据库server无数据");
@@ -128,7 +130,7 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
     map.put(fn, sign ? v.incrementCount() : v.decrementCount());
   }
 
-  class CountAndMetadata {
+  public class CountAndMetadata {
 
     private Integer count;
 

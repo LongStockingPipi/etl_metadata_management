@@ -65,4 +65,13 @@ public abstract class Metadata implements Serializable, Comparable {
   public int hashCode() {
     return Objects.hash(fullName);
   }
+
+  @Override
+  public String toString() {
+    return "Metadata{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", fullName='" + fullName + '\'' +
+        '}';
+  }
 }
