@@ -2,7 +2,6 @@ package pers.jason.etl.metadatamanager.web;
 
 import org.assertj.core.util.Sets;
 import pers.jason.etl.metadatamanager.core.support.Symbol;
-import pers.jason.etl.metadatamanager.core.synchronize.Column;
 import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalColumn;
 import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalSchema;
 import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTable;

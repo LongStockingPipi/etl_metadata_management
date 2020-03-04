@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import pers.jason.etl.metadatamanager.core.cache.CacheTemplate;
 import pers.jason.etl.metadatamanager.core.support.MetadataType;
 import pers.jason.etl.metadatamanager.core.support.PlatformType;
 import pers.jason.etl.metadatamanager.core.support.util.MetadataUtil;

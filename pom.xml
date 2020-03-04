@@ -9,8 +9,8 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>pers.jason.etl</groupId>
-    <artifactId>metadata-manager</artifactId>
+    <groupId>pers.jason.etl.metadata-manager</groupId>
+    <artifactId>metadata_manager</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>etl</name>
     <packaging>pom</packaging>
@@ -24,15 +24,7 @@
         <module>api</module>
         <module>core</module>
         <module>web</module>
+        <module>plugins</module>
     </modules>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

@@ -1,5 +1,6 @@
 package pers.jason.etl.metadatamanager.web.rest.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,9 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/2/22 23:05
  * @description
  */
+@Slf4j
 @Service
 public class RedisServiceImpl implements CacheService {
-
-  private static final Logger logger = LoggerFactory.getLogger(RedisServiceImpl.class);
 
   @Autowired
   private RedisTemplate<String, Object> redisTemplate;
@@ -51,11 +51,11 @@ public class RedisServiceImpl implements CacheService {
     Object obj = null;
     try {
       obj = redisTemplate.boundValueOps(CACHE_KEY_PREFIX + key).get();
-      logger.debug("从redis获取key为{}的缓存成功", key);
-      logger.debug("缓存内容为{}", obj);
+      log.debug("从redis获取key为{}的缓存成功", key);
+      log.debug("缓存内容为{}", obj);
     } catch (Exception e) {
-      logger.info("从redis获取缓存信息失败");
-      logger.error(e.getMessage(), e);
+      log.info("从redis获取缓存信息失败");
+      log.error(e.getMessage(), e);
     }
     return Optional.ofNullable((T) obj);
   }
@@ -64,10 +64,10 @@ public class RedisServiceImpl implements CacheService {
   public boolean setObj(String key, Object obj) {
     boolean flag = true;
     try {
-      logger.debug("redis放入缓存（永久）,key:{}", key);
+      log.debug("redis放入缓存（永久）,key:{}", key);
       redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + key, obj);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      log.error(e.getMessage(), e);
       flag = false;
     }
     return flag;
@@ -127,8 +127,8 @@ public class RedisServiceImpl implements CacheService {
             Thread.sleep(SPIN_CYCLE_TIME);
           } catch (InterruptedException e) {
             e.printStackTrace();
-            logger.error("an attempt to obtain a distributed lock was interrupted!");
-            logger.error(e.getMessage(), e);
+            log.error("an attempt to obtain a distributed lock was interrupted!");
+            log.error(e.getMessage(), e);
           }
         }
       }
@@ -155,8 +155,8 @@ public class RedisServiceImpl implements CacheService {
           connection.unwatch();
           break;
         } catch (Exception e) {
-          logger.error(e.getMessage(), e);
-          logger.error("other threads have modified the lock information");
+          log.error(e.getMessage(), e);
+          log.error("other threads have modified the lock information");
           try {
             Thread.sleep(SPIN_CYCLE_TIME);
           } catch (InterruptedException ex) {

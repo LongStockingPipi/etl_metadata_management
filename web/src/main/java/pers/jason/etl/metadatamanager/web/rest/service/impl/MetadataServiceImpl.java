@@ -1,7 +1,6 @@
 package pers.jason.etl.metadatamanager.web.rest.service.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.jason.etl.metadatamanager.core.connect.ConnectPioneer;
@@ -24,10 +23,9 @@ import pers.jason.etl.metadatamanager.web.rest.service.SynchronizeServiceHolder;
  * @date 2020/2/17 22:53
  * @description
  */
+@Slf4j
 @Service
 public class MetadataServiceImpl implements MetadataService {
-
-  private static final Logger logger = LoggerFactory.getLogger(MetadataServiceImpl.class);
 
   @Autowired
   private SynchronizeServiceHolder synchronizeServiceHolder;
@@ -69,7 +67,7 @@ public class MetadataServiceImpl implements MetadataService {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    logger.info("synchronous data completion! It takes " + (System.currentTimeMillis() - start) + " milliseconds");
+    log.info("synchronous data completion! It takes " + (System.currentTimeMillis() - start) + " milliseconds");
   }
 
   private ConnectPioneer getPioneerByPlatform(PlatformType platformType, Platform platform, String schemaName, String tableName) {

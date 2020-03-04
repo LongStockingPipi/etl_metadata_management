@@ -33,8 +33,6 @@ public class MetadataSyncTemplateTest {
   @Autowired
   private MetadataSynchronizeTemplate template;
 
-
-
   @Test
   public void testForRegisterFullNameInMap() {
     //prepare 800000 data
