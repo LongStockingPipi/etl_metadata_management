@@ -4,10 +4,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import pers.jason.etl.metadatamanager.core.support.SynchronizeModel;
+import pers.jason.etl.metadatamanager.core.support.props.CoreProperties;
 import pers.jason.etl.metadatamanager.core.synchronize.Metadata;
-import pers.jason.etl.metadatamanager.core.synchronize.MetadataSynchronize;
+import pers.jason.etl.metadatamanager.core.synchronize.Synchronized;
 import pers.jason.etl.metadatamanager.core.synchronize.Platform;
 
 import java.util.Iterator;
@@ -23,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date 2020/2/22 22:23
  * @description
  */
-public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize {
+public abstract class MetadataSynchronizeTemplate implements Synchronized {
 
   private static final Logger logger = LoggerFactory.getLogger(MetadataSynchronizeTemplate.class);
 
@@ -34,6 +36,9 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
   private static final String SYNC_LOCK_NAME_PREFIX = "sync_lock_name_";
 
   private static final ConcurrentHashMap<String, ThreadLock> lockMap = new ConcurrentHashMap<>();
+
+  @Autowired
+  private CoreProperties coreProperties;
 
   /**
    * 抽象同步方法
@@ -51,19 +56,19 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
     Platform remoteData = findDataFromRemote(synchronizeModel.getUrl(), synchronizeModel.getUsername(), synchronizeModel.getPassword()
         , platformId, synchronizeModel.getSchemaName(), synchronizeModel.getTableName());
 
-    logger.info(threadName + "：开始申请锁" + syncLock.getPlatform());
-    if(syncLock.tryLock(15, TimeUnit.SECONDS)) {
-      logger.info(threadName + "：申请锁成功" + syncLock.getPlatform());
+    logger.info(threadName + "：Start applying for locks " + syncLock.getPlatform());
+    if(syncLock.tryLock(coreProperties.getSyncLockTimeOut(), TimeUnit.SECONDS)) {
+      logger.info(threadName + "：Application for lock successful " + syncLock.getPlatform());
       try {
         Platform localData = findDataFromLocal(platformId, synchronizeModel.getSchemaId(), synchronizeModel.getTableId());
         Map<String, List<Metadata>> discrepantData = mergeData(localData, remoteData);
         processingData(localData, discrepantData);
       } finally {
-        logger.info(threadName + "：运行完成" + syncLock.getPlatform());
+        logger.info(threadName + "：Operation to complete " + syncLock.getPlatform());
         syncLock.unlock();
       }
     } else {
-      logger.info(threadName + "：同步超时" + syncLock.getPlatform());
+      logger.info(threadName + "：Synchronization timeouts " + syncLock.getPlatform());
     }
 
   }
@@ -75,7 +80,7 @@ public abstract class MetadataSynchronizeTemplate implements MetadataSynchronize
   public Map<String, List<Metadata>> mergeData(Platform localData, Platform remoteData) {
     Map<String, List<Metadata>> diff = Maps.newHashMap();
     if(null == remoteData) {
-      throw new RuntimeException("外部数据库server无数据");
+      throw new RuntimeException("The external database server has no data");
     }
     if(null == localData) {
       diff.put(DATA_MISSING, Lists.newArrayList(remoteData.getChild()));

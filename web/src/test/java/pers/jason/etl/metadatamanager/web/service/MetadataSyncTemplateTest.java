@@ -11,7 +11,6 @@ import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform
 import pers.jason.etl.metadatamanager.core.synchronize.impl.MetadataSynchronizeTemplate;
 import pers.jason.etl.metadatamanager.web.MetadataUnitUtil;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;

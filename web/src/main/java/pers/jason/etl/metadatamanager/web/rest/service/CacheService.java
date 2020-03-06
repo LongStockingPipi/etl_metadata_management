@@ -21,11 +21,4 @@ public interface CacheService extends CacheTemplate {
 
   String RESULT_TABLE_FAILED = "ERR";
 
-  String tryGetDistributedLock(String lockName, long timeout, long expireTime);
-
-  void releaseLock(String lockName, String value);
-
-  String tryGetDistributedLockWithLUA(String lockName, long timeout, long expireTime);
-
-  void releaseLockWithLUA(String lockName, String value);
 }

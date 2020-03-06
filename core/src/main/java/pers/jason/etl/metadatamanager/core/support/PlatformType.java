@@ -4,7 +4,9 @@ public enum PlatformType {
 
   MYSQL(0, "mysql"),
 
-  ORACLE(1, "oracle");
+  ORACLE(1, "oracle"),
+
+  HIVE(2, "hive");
 
   public Integer code;
 

@@ -7,7 +7,7 @@ import pers.jason.etl.metadatamanager.core.support.SynchronizeModel;
  * @date 2020/2/22 22:06
  * @description
  */
-public interface MetadataSynchronize {
+public interface Synchronized {
 
   void synchronize(SynchronizeModel model) throws InterruptedException;
 

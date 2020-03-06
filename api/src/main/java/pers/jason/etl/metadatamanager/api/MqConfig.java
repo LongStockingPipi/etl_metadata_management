@@ -10,4 +10,5 @@ public class MqConfig {
   public static final String QUEUE_MQ_METADATA_NAME = "MetadataQueue";
 
   public static final String QUEUE_EXCHANGE_SYNC = "SyncRequest";
+
 }

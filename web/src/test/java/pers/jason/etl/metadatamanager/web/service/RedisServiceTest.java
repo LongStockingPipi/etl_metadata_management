@@ -38,14 +38,12 @@ public class RedisServiceTest {
     CountDownLatch countDownLatch2 = new CountDownLatch(threadSize);
 
     String lockName = "sync_lock";
-    long timeOut = 15000; //依赖锁竞争强度
-    long expireTime = 10; //依赖平均执行时间
     ExecutorService threadPool = Executors.newFixedThreadPool(threadSize);
     for (int i = 0; i < threadSize; i++) {
       threadPool.submit(() -> {
         String threadName = Thread.currentThread().getName();
         countDownLatch.countDown();
-        String v = cacheService.tryGetDistributedLockWithLUA(lockName, timeOut, expireTime);
+        String v = cacheService.getDistributedLock(lockName);
         if(StringUtils.isEmpty(v)) {
           System.out.println(threadName + "获取锁超时");
         } else {
@@ -55,7 +53,7 @@ public class RedisServiceTest {
           } catch (InterruptedException e) {
             e.printStackTrace();
           } finally {
-            cacheService.releaseLockWithLUA(lockName, v);
+            cacheService.releaseDistributedLock(lockName, v);
             System.out.println(threadName + "释放锁");
           }
         }

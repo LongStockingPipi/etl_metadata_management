@@ -1,30 +1,17 @@
 package pers.jason.etl.metadatamanager.core.synchronize.internal;
 
-import pers.jason.etl.metadatamanager.core.support.MetadataType;
-import pers.jason.etl.metadatamanager.core.synchronize.Metadata;
-import pers.jason.etl.metadatamanager.core.synchronize.Platform;
-
-import java.util.Set;
+import pers.jason.etl.metadatamanager.core.support.PlatformType;
+import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform;
 
 /**
  * @author Jason
  * @date 2020/2/18 1:22
- * @description
+ * @description 虚拟平台，因为hive没有平台概念，方便同步操作
  */
-public class VirtualPlatform extends Platform {
+public class VirtualPlatform extends ExternalPlatform {
 
-  @Override
-  public MetadataType returnMetadataType() {
-    return MetadataType.PLATFORM;
+  {
+    this.setTypeCode(PlatformType.HIVE.code);
   }
 
-  @Override
-  public <T extends Metadata> Set<T> getChild() {
-    return null;
-  }
-
-  @Override
-  public void setParentId(Long id) {
-
-  }
 }
