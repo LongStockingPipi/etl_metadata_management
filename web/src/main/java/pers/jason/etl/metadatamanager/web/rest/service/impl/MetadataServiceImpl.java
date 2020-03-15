@@ -39,9 +39,6 @@ public class MetadataServiceImpl implements MetadataService {
   private SynchronizeServiceHolder synchronizeServiceHolder;
 
   @Autowired
-  private DatabaseConnector databaseConnector;
-
-  @Autowired
   private ExternalPlatformDao externalPlatformDao;
 
   @Autowired
@@ -69,7 +66,7 @@ public class MetadataServiceImpl implements MetadataService {
     String schemaName = externalSchemaDao.findSchema(schemaId).getName();
     String tableName = externalTableDao.findTable(tableId).getName();
     ConnectPioneer pioneer = getPioneerByPlatform(platformType, platform, schemaName, tableName);
-    databaseConnector.tryConnect(pioneer);
+    synchronizeServiceHolder.findDatabaseConnector(platformType).tryConnect(pioneer);
 
     MetadataSynchronizeTemplate synchronizeTemplate = synchronizeServiceHolder.findMetadataSynchronizeService(platformType);
     SynchronizeModel synchronizeModel = new SynchronizeModel(

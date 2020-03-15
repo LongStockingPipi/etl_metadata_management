@@ -2,8 +2,6 @@ package pers.jason.etl.metadatamanager.core.connect.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import pers.jason.etl.metadatamanager.core.connect.ConnectPioneer;
 import pers.jason.etl.metadatamanager.core.connect.DatabaseConnector;
@@ -19,23 +17,27 @@ import java.sql.SQLException;
 
 /**
  * @author Jason
- * @date 2020/2/22 23:18
+ * @date 2020/3/15 21:52
  * @description
  */
 @Slf4j
 @Component
-public class MySqlConnector implements DatabaseConnector {
+public class OracleConnector implements DatabaseConnector {
 
-  private static final String SQL_EXIST_TABLE = "select exists(select * from INFORMATION_SCHEMA.TABLES where table_schema = '%s' and table_name = '%s') as is_exist";
+  private static final String USER_EXIST = "select count(*) as count from DBA_USERS where USERNAME = '%s'";
 
-  private static final String SQL_RESULT_COLUMN_LABEL_IS_EXIST = "is_exist";
+  private static final String USER_AND_TABLE_EXIST
+      = "select count(*) as count from ALL_TABLES where OWNER = '%s' and TABLE_NAME = '%s'";
+
+  private static final String SQL_RESULT_COLUMN_LABEL_IS_EXIST = "count";
+
+  private static final Integer SINGLE_RESULT = 1;
 
   @Override
   public void tryConnect(ConnectPioneer pioneer) {
     //检测驱动
-    String driverName = pioneer.getDriverName();
     try {
-      Class.forName(driverName);
+      Class.forName(pioneer.getDriverName());
       log.info("drive load successful:" + getConnectMessage(pioneer));
     } catch (ClassNotFoundException e) {
       log.error(e.getMessage(), e);
@@ -43,21 +45,25 @@ public class MySqlConnector implements DatabaseConnector {
       log.info(message);
       throw new DatabaseServerConnectFailedException(message);
     }
-    //连接server
-    String url = MetadataUtil.getUrlByPioneer(pioneer);
+
+    String schemaName = pioneer.getSchemaName();
+    if(StringUtils.isEmpty(schemaName)) {
+      log.info("schema [" + schemaName + "] does not exist");
+      throw new DatabaseServerConnectFailedException("schema [" + schemaName + "] does not exist");
+    }
+
+    String url = pioneer.getUrl();
     try (Connection connection = DriverManager.getConnection(url, pioneer.getUsername(), pioneer.getPassword())) {
       String tableName = pioneer.getTableName();
-      if(StringUtils.isNotEmpty(tableName)) {
-        String schemaName = pioneer.getSchemaName();
-        String sql = String.format(SQL_EXIST_TABLE, schemaName, tableName);
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        if(resultSet.next()) {
-          boolean tableExist = resultSet.getBoolean(SQL_RESULT_COLUMN_LABEL_IS_EXIST);
-          if(!tableExist) {
-            log.info("database connection failed:table [" + schemaName + "." + tableName + "] does not exist");
-            throw new DatabaseServerConnectFailedException("table [" + schemaName + "." + tableName + "] does not exist");
-          }
+      String sql = StringUtils.isEmpty(tableName) ?
+          String.format(USER_EXIST, schemaName) : String.format(USER_AND_TABLE_EXIST, schemaName, tableName);
+      PreparedStatement preparedStatement = connection.prepareStatement(sql);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      if(resultSet.next()) {
+        int tableExist = resultSet.getInt(SQL_RESULT_COLUMN_LABEL_IS_EXIST);
+        if(tableExist != SINGLE_RESULT) {
+          log.info("database connection failed:schema(or table) [" + schemaName + "." + tableName + "] does not exist");
+          throw new DatabaseServerConnectFailedException("schema(or table) [" + schemaName + "." + tableName + "] does not exist");
         }
       }
       log.info("database connection successful");
