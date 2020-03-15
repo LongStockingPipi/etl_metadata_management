@@ -21,4 +21,6 @@ public class SimpleProperties implements Properties {
 
   private Long lockExpireTime = 10L; //依赖平均执行时间
 
+  private Long metadataExpireTime = 60*60*2L; //元数据缓存有效时间
+
 }

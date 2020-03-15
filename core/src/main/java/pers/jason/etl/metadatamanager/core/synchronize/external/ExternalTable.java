@@ -33,7 +33,7 @@ public class ExternalTable extends Table {
   private Set<ExternalColumn> columnSet = Sets.newHashSet();
 
   @Override
-  public <T extends Metadata> Set<T> getChild() {
+  public <T extends Metadata> Set<T> findChild() {
     return (Set<T>) columnSet;
   }
 

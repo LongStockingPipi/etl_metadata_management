@@ -40,7 +40,7 @@ public abstract class Metadata implements Serializable, Comparable {
 
   public abstract MetadataType returnMetadataType();
 
-  public abstract <T extends Metadata> Set<T> getChild();
+  public abstract <T extends Metadata> Set<T>findChild();
 
   public abstract void setParentId(Long id);
 

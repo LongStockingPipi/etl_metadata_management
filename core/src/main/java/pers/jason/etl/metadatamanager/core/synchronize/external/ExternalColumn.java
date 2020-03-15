@@ -42,7 +42,7 @@ public class ExternalColumn extends Column {
   private Integer position;
 
   @Override
-  public <T extends Metadata> Set<T> getChild() {
+  public <T extends Metadata> Set<T> findChild() {
     return null;
   }
 

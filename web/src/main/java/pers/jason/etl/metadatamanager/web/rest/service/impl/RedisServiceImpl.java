@@ -7,13 +7,19 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.scripting.ScriptSource;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.util.MapUtils;
 import pers.jason.etl.metadatamanager.core.lock.Distributable;
 import pers.jason.etl.metadatamanager.web.props.SimpleProperties;
 import pers.jason.etl.metadatamanager.web.rest.service.CacheService;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Jason
@@ -43,10 +49,8 @@ public class RedisServiceImpl implements CacheService, Distributable<String> {
     Object obj = null;
     try {
       obj = redisTemplate.boundValueOps(CACHE_KEY_PREFIX + key).get();
-      log.debug("从redis获取key为{}的缓存成功", key);
-      log.debug("缓存内容为{}", obj);
+      log.debug("get key [" + key + "] value [" + obj + "]");
     } catch (Exception e) {
-      log.info("从redis获取缓存信息失败");
       log.error(e.getMessage(), e);
     }
     return Optional.ofNullable((T) obj);
@@ -56,13 +60,87 @@ public class RedisServiceImpl implements CacheService, Distributable<String> {
   public boolean setObj(String key, Object obj) {
     boolean flag = true;
     try {
-      log.debug("redis放入缓存（永久）,key:{}", key);
+      log.debug("save key:{}", key);
       redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + key, obj);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       flag = false;
     }
     return flag;
+  }
+
+  /**
+   * 放入缓存（带时间） 传入0或负数则不缓存
+   *
+   * @param key        键
+   * @param obj        对象
+   * @param expireTime 过期时间
+   * @param timeUnit   单位
+   * @return
+   */
+  public boolean setObj(String key, Object obj, long expireTime, TimeUnit timeUnit) {
+    if (obj == null) {
+      return false;
+    }
+    boolean flag = true;
+    try {
+      if (expireTime > 0) {
+        redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + key, obj, expireTime, timeUnit);
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      flag = false;
+    }
+    return flag;
+  }
+
+  public boolean setHashObj(String key, Map hashMap) {
+    if (MapUtils.isEmpty(hashMap)) {
+      return false;
+    }
+    boolean flag = true;
+    try {
+      redisTemplate.opsForHash().putAll(CACHE_KEY_PREFIX + key, hashMap);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      flag = false;
+    }
+    return flag;
+  }
+
+  /**
+   * 获取Hash缓存 多个
+   *
+   * @param key
+   * @param fields
+   * @param <T>
+   * @return
+   */
+  public <T> Optional<List<T>> getHashObjects(String key, List<Object> fields) {
+    List<T> list = null;
+    try {
+      list = (List<T>) redisTemplate.boundHashOps(CACHE_KEY_PREFIX + key).multiGet(fields);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return Optional.ofNullable(list);
+  }
+
+  /**
+   * 删除缓存<br>
+   * 根据key精确匹配删除
+   *
+   * @param key
+   */
+  public void del(String... key) {
+    if (key != null && key.length > 0) {
+      if (key.length == 1) {
+        redisTemplate.delete(CACHE_KEY_PREFIX + key[0]);
+      } else {
+        List<String> list = Stream.of(key).map((e) -> CACHE_KEY_PREFIX + e).collect(Collectors.toList());
+        redisTemplate.delete(list);
+      }
+    }
   }
 
   @Override

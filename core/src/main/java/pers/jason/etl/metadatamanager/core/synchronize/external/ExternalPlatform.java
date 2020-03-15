@@ -30,7 +30,7 @@ public class ExternalPlatform extends Platform {
   }
 
   @Override
-  public <T extends Metadata> Set<T> getChild() {
+  public <T extends Metadata> Set<T> findChild() {
     return (Set<T>) schemaSet;
   }
 

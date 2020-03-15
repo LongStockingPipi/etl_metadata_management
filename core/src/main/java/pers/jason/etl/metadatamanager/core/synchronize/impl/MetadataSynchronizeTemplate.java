@@ -83,7 +83,7 @@ public abstract class MetadataSynchronizeTemplate implements Synchronized {
       throw new RuntimeException("The external database server has no data");
     }
     if(null == localData) {
-      diff.put(DATA_MISSING, Lists.newArrayList(remoteData.getChild()));
+      diff.put(DATA_MISSING, Lists.newArrayList(remoteData.findChild()));
       return diff;
     }
 
@@ -123,7 +123,7 @@ public abstract class MetadataSynchronizeTemplate implements Synchronized {
    * @param map
    */
   private void registerFullNameInMap(final Metadata metadata, boolean sign, Map<String, CountAndMetadata> map) {
-    Set<Metadata> child = metadata.getChild();
+    Set<Metadata> child = metadata.findChild();
     if(!CollectionUtils.isEmpty(child)) {
       for(Metadata data : child) {
         registerFullNameInMap(data, sign, map);

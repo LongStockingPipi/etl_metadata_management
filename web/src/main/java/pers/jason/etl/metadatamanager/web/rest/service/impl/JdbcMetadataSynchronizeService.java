@@ -108,7 +108,7 @@ public abstract class JdbcMetadataSynchronizeService extends MetadataSynchronize
   }
 
   private void registerFullNameAndIdInMap(Metadata metadata, Map<String, Long> map) {
-    Set<Metadata> child = metadata.getChild();
+    Set<Metadata> child = metadata.findChild();
     if(!CollectionUtils.isEmpty(child)) {
       for(Metadata data : child) {
         registerFullNameAndIdInMap(data, map);

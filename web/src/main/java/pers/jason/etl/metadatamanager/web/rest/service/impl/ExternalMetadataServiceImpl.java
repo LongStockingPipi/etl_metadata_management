@@ -95,7 +95,7 @@ public class ExternalMetadataServiceImpl implements MetadataCrudService {
 
       insertSchema(schemas);
       schemas.forEach(schema -> {
-        Set<Metadata> child = schema.getChild();
+        Set<Metadata> child = schema.findChild();
         if(!CollectionUtils.isEmpty(child)) {
           child.forEach(table -> {
             table.setParentId(schema.getId());
@@ -106,7 +106,7 @@ public class ExternalMetadataServiceImpl implements MetadataCrudService {
 
       insertTables(tables);
       tables.forEach(table -> {
-        Set<Metadata> child = table.getChild();
+        Set<Metadata> child = table.findChild();
         if(!CollectionUtils.isEmpty(child)) {
           child.forEach(column -> {
             column.setParentId(table.getId());
