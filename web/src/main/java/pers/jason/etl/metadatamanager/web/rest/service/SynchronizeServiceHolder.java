@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class SynchronizeServiceHolder {
 
-  private static final String SUFFIX_TEMPLATE_SERVICE_NAME = "SynchronizeTemplate";
+  private static final String SUFFIX_TEMPLATE_SERVICE_NAME = "MetadataSynchronizeService";
 
   private static final String SUFFIX_METADATA_CRUD_SERVICE_NAME = "MetadataServiceImpl";
 

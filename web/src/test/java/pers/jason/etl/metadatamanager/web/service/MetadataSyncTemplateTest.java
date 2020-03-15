@@ -3,6 +3,7 @@ package pers.jason.etl.metadatamanager.web.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import pers.jason.etl.metadatamanager.core.support.PlatformType;
 import pers.jason.etl.metadatamanager.core.support.Symbol;
 import pers.jason.etl.metadatamanager.core.support.SynchronizeModel;
 import pers.jason.etl.metadatamanager.core.support.util.MetadataUtil;
@@ -10,6 +11,7 @@ import pers.jason.etl.metadatamanager.core.synchronize.Metadata;
 import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalPlatform;
 import pers.jason.etl.metadatamanager.core.synchronize.impl.MetadataSynchronizeTemplate;
 import pers.jason.etl.metadatamanager.web.MetadataUnitUtil;
+import pers.jason.etl.metadatamanager.web.rest.service.SynchronizeServiceHolder;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,7 @@ public class MetadataSyncTemplateTest {
   private static final Integer THREAD_COUNT = 20;
 
   @Autowired
-  private MetadataSynchronizeTemplate template;
+  private SynchronizeServiceHolder synchronizeServiceHolder;
 
   @Test
   public void testForRegisterFullNameInMap() {
@@ -53,6 +55,7 @@ public class MetadataSyncTemplateTest {
 
 
     Long start = System.currentTimeMillis();
+    MetadataSynchronizeTemplate template = synchronizeServiceHolder.findMetadataSynchronizeService(PlatformType.MYSQL);
     Map<String, List<Metadata>> map = template.mergeData(platform1, platform2);
     System.out.println("消耗时间：" + (System.currentTimeMillis() - start));
     System.out.println("本地缺失数据：" + map.get("missingData").size() + "; 本地多余数据：" + map.get("refundData").size());
@@ -61,8 +64,12 @@ public class MetadataSyncTemplateTest {
   @Test
   public void successForSync() {
     try {
+//      MetadataSynchronizeTemplate template = synchronizeServiceHolder.findMetadataSynchronizeService(PlatformType.MYSQL);
 //      template.synchronize(getSynchronizeModelRemote());
-      template.synchronize(getSynchronizeModelLocal());
+//      template.synchronize(getSynchronizeModelLocal());
+
+      MetadataSynchronizeTemplate template = synchronizeServiceHolder.findMetadataSynchronizeService(PlatformType.ORACLE);
+      template.synchronize(getSynchronizeModelOracle());
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -70,14 +77,15 @@ public class MetadataSyncTemplateTest {
 
   @Test
   public void successForConcurrentAccess() {
+    MetadataSynchronizeTemplate template = synchronizeServiceHolder.findMetadataSynchronizeService(PlatformType.MYSQL);
     CountDownLatch cdt = new CountDownLatch(THREAD_COUNT);
     CyclicBarrier cyclicBarrier = new CyclicBarrier(THREAD_COUNT);
     ExecutorService pool = Executors.newFixedThreadPool(THREAD_COUNT);
     for (int i = 0; i < THREAD_COUNT; i++) {
       if(0 == (i & 1)) {
-        pool.execute(new SyncService(cyclicBarrier, cdt, getSynchronizeModelLocal()));
+        pool.execute(new SyncService(template, cyclicBarrier, cdt, getSynchronizeModelLocal()));
       } else {
-        pool.execute(new SyncService(cyclicBarrier, cdt, getSynchronizeModelRemote()));
+        pool.execute(new SyncService(template, cyclicBarrier, cdt, getSynchronizeModelRemote()));
       }
     }
 
@@ -99,6 +107,18 @@ public class MetadataSyncTemplateTest {
     return synchronizeModel;
   }
 
+  private SynchronizeModel getSynchronizeModelOracle() {
+    SynchronizeModel synchronizeModel = new SynchronizeModel();
+    synchronizeModel.setUrl("jdbc:oracle:thin:@//localhost:1521/helowin");
+    synchronizeModel.setUsername("system");
+    synchronizeModel.setPassword("oracle");
+    synchronizeModel.setDriverName("oracle.jdbc.driver.OracleDriver");
+    synchronizeModel.setPlatformId(3L);
+    synchronizeModel.setSchemaId(304L);
+    synchronizeModel.setSchemaName("JZH");
+    return synchronizeModel;
+  }
+
   private SynchronizeModel getSynchronizeModelRemote() {
     SynchronizeModel synchronizeModel = new SynchronizeModel();
     synchronizeModel.setUrl("jdbc:mysql://47.100.102.187:3306?serverTimezone=UTC");
@@ -117,10 +137,15 @@ public class MetadataSyncTemplateTest {
 
     SynchronizeModel synchronizeModel;
 
-    public SyncService(CyclicBarrier cyclicBarrier, CountDownLatch countDownLatch, SynchronizeModel synchronizeModel) {
+    MetadataSynchronizeTemplate template;
+
+    public SyncService(
+        MetadataSynchronizeTemplate template, CyclicBarrier cyclicBarrier
+        , CountDownLatch countDownLatch, SynchronizeModel synchronizeModel) {
       this.cyclicBarrier = cyclicBarrier;
       this.countDownLatch = countDownLatch;
       this.synchronizeModel = synchronizeModel;
+      this.template = template;
     }
 
     @Override

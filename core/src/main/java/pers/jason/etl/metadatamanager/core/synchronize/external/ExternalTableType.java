@@ -4,7 +4,8 @@ public enum ExternalTableType {
 
   BASE_TABLE(0, "BASE TABLE"),
   VIEW(1, "VIEW"),
-  SYSTEM_VIEW(2, "SYSTEM VIEW");
+  SYSTEM_VIEW(2, "SYSTEM VIEW"),
+  TABLE(3, "TABLE");
 
   public Integer code;
 

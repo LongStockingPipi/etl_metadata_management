@@ -5,6 +5,7 @@ import pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTableTyp
 
 import static pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTableType.BASE_TABLE;
 import static pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTableType.SYSTEM_VIEW;
+import static pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTableType.TABLE;
 import static pers.jason.etl.metadatamanager.core.synchronize.external.ExternalTableType.VIEW;
 
 /**
@@ -26,6 +27,9 @@ public class TableTypeUtil {
       }
       if(SYSTEM_VIEW.name.equals(typeName)) {
         return SYSTEM_VIEW;
+      }
+      if(TABLE.name.equals(typeName)) {
+        return TABLE;
       }
       return ExternalTableType.valueOf(upperName);
     } catch (Exception e) {

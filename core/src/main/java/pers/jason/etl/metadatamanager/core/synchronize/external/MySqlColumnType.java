@@ -1,6 +1,6 @@
 package pers.jason.etl.metadatamanager.core.synchronize.external;
 
-public enum MySqlColumnType implements ExternalColumnType{
+public enum MySqlColumnType implements ExternalColumnType {
 
   INT(0, "int"),
 
